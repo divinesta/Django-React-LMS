@@ -3,8 +3,7 @@ import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
 import { Link } from 'react-router-dom'
 
-
-function Register() {
+const Register = () => {
   return (
     <>
       <BaseHeader />
@@ -91,4 +90,4 @@ function Register() {
   )
 }
 
-export default Register
+export default Register;

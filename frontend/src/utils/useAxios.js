@@ -1,11 +1,11 @@
 import axios from "axios";
 import { isAccessTokenExpired, setAuthUser, getRefreshToken } from "./auth";
-import { BASE_URL } from "./constant";
-import Cookies from "js-cookie";
+import { BASE_URL } from "./constants";
+import Cookie from "js-cookie";
 
 const useAxios = async () => {
-   const access_token = Cookies.get("access_token");
-   const refresh_token = Cookies.get("refresh_token");
+   const access_token = Cookie.get("access_token");
+   const refresh_token = Cookie.get("refresh_token");
 
    const axiosInstance = axios.create({
       baseURL: BASE_URL,

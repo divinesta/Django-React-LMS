@@ -7,11 +7,9 @@ const MainWrapper = ({ children }) => {
    useEffect(() => {
       const handler = async () => {
          setLoading(true);
-         try {
-            await setUser();
-         } catch (error) {
-            console.error("Failed to set user:", error);
-         }
+         
+         await setUser();
+         
          setLoading(false);
       };
       handler();
