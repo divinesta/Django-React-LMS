@@ -5,8 +5,9 @@ import MainWrapper from "./layout/MainWrapper";
 import Dashboard from './views/auth/Dashboard'
 import Register from "./views/auth/Register";
 import Login from "./views/auth/Login";
+import Logout from "./views/auth/Logout"
 
-function App() {
+const App = () => {
    return (
       <BrowserRouter>
          <MainWrapper>
@@ -14,6 +15,7 @@ function App() {
                <Route path="/" element={<Dashboard />} />
                <Route path="/register/" element={<Register />} />
                <Route path="/login/" element={<Login />} />
+               <Route path="/logout/" element={<Logout />} />
             </Routes>
          </MainWrapper>
       </BrowserRouter>
