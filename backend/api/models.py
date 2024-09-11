@@ -22,18 +22,39 @@ LEVEL = (
     ("Advanced", "Advanced"),
 )
 
-STATUS = (
+TEACHER_STATUS = (
     ("Draft", "Draft"),
     ("Disabled", "Disabled"),
     ("Published", "Published"),
 )
 
-PLATFORM = (
+PAYMENT_STATUS = (
+    ("Paid", "Paid"),
+    ("Processing", "Processing"),
+    ("Failed", "Failed"),
+)
+
+PLATFORM_STATUS = (
     ("Review", "Review"),
     ("Disabled", "Disabled"),
     ("Rejected", "Rejected"),
     ("Draft", "Draft"),
     ("Published", "Published"),
+)
+
+RATING = (
+    ("1 Star", "1 Star"),
+    ("2 Star", "2 Star"),
+    ("3 Star", "3 Star"),
+    ("4 Star", "4 Star"),
+    ("5 Star", "5 Star"),
+)
+
+NOTIFICATION_TYPE = (
+    ("New Order", "New Order"),
+    ("New Review", "New Review"),
+    ("New Course Question", "New Course Question"),
+    ("Course Published", "Course Published"),
 )
 
 class Teacher(models.Model):
@@ -57,11 +78,13 @@ class Teacher(models.Model):
         return Course.objects.filter(teacher=self)
     
     def review(self):
-        return Course.objects.filter(teacher=self)
-    
+        return Course.objects.filter(teacher=self).count()
+
+
 class Category(models.Model):
     title = models.CharField(max_length=100)
     image = models.FileField(upload_to="course-file", null=True, blank=True, default="category.jpg")
+    active = models.BooleanField(default=True)
     slug = models.SlugField(unique=True, null=True, blank=True)
 
     class Meta:
@@ -79,6 +102,7 @@ class Category(models.Model):
             self.slug = slugify(self.title)
         super(Category, self).save(*args, **kwargs)
 
+
 class Course(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
@@ -89,8 +113,8 @@ class Course(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     language = models.CharField(max_length=100, choices=LANGUAGE, default="English")
     level = models.CharField(max_length=100, choices=LEVEL, default="Beginner")
-    platform_status = models.CharField(max_length=100, choices=PLATFORM, default="Published")
-    teacher_course_status = models.CharField(max_length=100, choices=STATUS, default="Draft")
+    platform_status = models.CharField(max_length=100, choices=PLATFORM_STATUS, default="Published")
+    teacher_course_status = models.CharField(max_length=100, choices=TEACHER_STATUS, default="Draft")
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -111,17 +135,16 @@ class Course(models.Model):
         return VariantItem.objects.filter(variant__course=self)
     
     def lectures(self):
-        return Lecture.objects.filter(variant__course=self)
+        return VariantItem.objects.filter(variant__course=self)
     
     def average_rating(self):
         average_rating = Review.objects.filter(course=self).aggregate(avg_rating=Avg("rating"))
         return average_rating["avg_rating"]
     
     def rating_count(self):
-        rating_count = Review.objects.filter(course=self, active=True).count()
-        return rating_count
-    
-    def review(self):
+        return Review.objects.filter(course=self, active=True).count()
+
+    def reviews(self):
         return Review.objects.filter(course=self, active=True)
 
 
@@ -135,6 +158,9 @@ class Variant(models.Model):
         return self.title
     
     def variant_items(self):
+        return VariantItem.objects.filter(variant=self)
+
+    def items(self):
         return VariantItem.objects.filter(variant=self)
 
 
@@ -185,6 +211,7 @@ class Question_Answer(models.Model):
     def profile(self):
         return Profile.objects.get(user=self.user)
 
+
 class Question_Answer_Message(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     question = models.ForeignKey(Question_Answer, on_delete=models.CASCADE)
@@ -201,3 +228,192 @@ class Question_Answer_Message(models.Model):
 
     def profile(self):
         return Profile.objects.get(user=self.user)
+
+
+class Cart(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    tax_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    cart_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.course.title
+
+
+class CartOrder(models.Model):
+    student = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    teachers = models.ManyToManyField(Teacher, blank=True, related_name="cart_orders")
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    tax_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    initial_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    payment_status = models.CharField(max_length=100, choices=PAYMENT_STATUS, default="Processing")
+    full_name = models.CharField(max_length=100, null=True, blank=True)
+    email = models.EmailField(max_length=100, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    coupons = models.ManyToManyField("api.Coupon", blank=True, related_name="cart_orders")
+    stripe_session_id = models.CharField(max_length=1000, null=True, blank=True)
+    oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    date = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return self.oid
+    
+    class Meta:
+        ordering = ["-date"]
+
+    def order_items(self):
+        return CartOrderItem.objects.filter(order=self)
+
+
+class CartOrderItem(models.Model):
+    order = models.ForeignKey(CartOrder, on_delete=models.CASCADE, related_name="order_items")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="order_item")
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    tax_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    initial_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    saved = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    coupons = models.ForeignKey("api.Coupon", on_delete=models.SET_NULL, null=True, blank=True)
+    applied_coupon = models.BooleanField(default=False)
+    oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    date = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-date"]
+
+    def order_id(self):
+        return f"Order ID #{self.order.oid}"
+    
+    def payment_status(self):
+        return f"{self.order.payment_status}"
+    
+    def __str__(self):
+        return self.oid
+
+
+class Certificate(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    certificate_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.course.title
+
+
+class CompletedLesson(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    variant_item = models.ForeignKey(VariantItem, on_delete=models.CASCADE)
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.course.title
+
+
+class EnrolledCourse(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
+    order_item = models.ForeignKey(CartOrderItem, on_delete=models.CASCADE)
+    enrolled_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.course.title
+
+    def lectures(self):
+        return VariantItem.objects.filter(variant__course=self.course)
+
+    def completed_lesson(self):
+        return CompletedLesson.objects.filter(course=self.course, user=self.user)
+    
+    def curriculum(self):
+        return Variant.objects.filter(course=self.course)
+    
+    def note(self):
+        return Note.objects.filter(course=self.course, user=self.user)
+    
+    def question_answer(self):
+        return Question_Answer.objects.filter(course=self.course)
+    
+    def review(self):
+        return Review.objects.filter(course=self.course, user=self.user).first()
+
+
+class Note(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    title = models.CharField(max_length=1000, null=True, blank=True)
+    note = models.TextField()
+    note_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.title
+
+
+class Review(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    rating = models.CharField(max_length=100, choices=RATING, default="None")
+    review = models.TextField(null=True, blank=True)
+    reply = models.TextField(null=True, blank=True)
+    active = models.BooleanField(default=False)
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.course.title
+    
+    def profile(self):
+        return Profile.objects.get(user=self.user)
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
+    order = models.ForeignKey(CartOrder, on_delete=models.SET_NULL, null=True, blank=True)
+    order_item = models.ForeignKey(CartOrderItem, on_delete=models.SET_NULL, null=True, blank=True)
+    review = models.ForeignKey(Review, on_delete=models.SET_NULL, null=True, blank=True)
+    notification_type = models.CharField(max_length=100, choices=NOTIFICATION_TYPE, default="None")
+    seen = models.BooleanField(default=False)
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.notification_type
+    
+class Coupon(models.Model):
+    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
+    used_by = models.ManyToManyField(User, blank=True)
+    code = models.CharField(max_length=100, unique=True)
+    discount = models.IntegerField(default=1)
+    active = models.BooleanField(default=True)
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.code
+
+class Wishlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.course.title)
+    
+class Country(models.Model):
+    name = models.CharField(max_length=100)
+    tax_rate = models.IntegerField(default=1)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+
+
+
