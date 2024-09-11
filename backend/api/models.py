@@ -1,10 +1,12 @@
 from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
+from django.db.models import Avg
 
 from userauths.models import User, Profile
 from shortuuid.django_fields import ShortUUIDField
-
+from moviepy.editor import VideoFileClip
+import math
 # Create your models here.
 
 
@@ -85,10 +87,10 @@ class Course(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    language = models.CharField(choices=LANGUAGE, default="English")
-    level = models.CharField(choices=LEVEL, default="Beginner")
-    platform_status = models.CharField(choices=PLATFORM, default="Published")
-    teacher_course_status = models.CharField(choices=STATUS, default="Draft")
+    language = models.CharField(max_length=100, choices=LANGUAGE, default="English")
+    level = models.CharField(max_length=100, choices=LEVEL, default="Beginner")
+    platform_status = models.CharField(max_length=100, choices=PLATFORM, default="Published")
+    teacher_course_status = models.CharField(max_length=100, choices=STATUS, default="Draft")
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -102,4 +104,63 @@ class Course(models.Model):
             self.slug = slugify(self.title)
         super(Course, self).save(*args, **kwargs)
 
+    def students(self):
+        return EnrolledCourse.objects.filter(course=self)
+    
+    def curriculum(self):
+        return VariantItem.objects.filter(variant__course=self)
+    
+    def lectures(self):
+        return Lecture.objects.filter(variant__course=self)
+    
+    def average_rating(self):
+        average_rating = Review.objects.filter(course=self).aggregate(avg_rating=Avg("rating"))
+        return average_rating["avg_rating"]
+    
+    def rating_count(self):
+        rating_count = Review.objects.filter(course=self, active=True).count()
+        return rating_count
+    
+    def review(self):
+        return Review.objects.filter(course=self, active=True)
 
+
+class Variant(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    title = models.CharField(max_length=1000)
+    variant_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.title
+    
+    def variant_items(self):
+        return VariantItem.objects.filter(variant=self)
+
+
+class VariantItem(models.Model):
+    variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name="variant_items")
+    title = models.CharField(max_length=1000)
+    description = models.TextField(null=True, blank=True)
+    file = models.FileField(upload_to="course-file")
+    duration = models.CharField(max_length=100, null=True, blank=True)
+    content_duration = models.CharField(max_length=1000, null=True, blank=True)
+    preview = models.BooleanField(default=False)
+    variant_item_id = ShortUUIDField(
+        unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.variant.title} - {self.title}"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.file:
+            clip = VideoFileClip(self.file.path)
+            duration_seconds = clip.duration
+            minutes, seconds = divmod(duration_seconds, 60)
+            minutes = math.floor(minutes)
+            seconds = math.floor(seconds)
+            self.content_duration = f"{minutes}m {seconds}s"
+            super().save(update_fields=["content_duration"])

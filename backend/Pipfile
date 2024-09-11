@@ -47,6 +47,7 @@ urllib3 = "*"
 pylint-django = "*"
 drf-yasg = "*"
 setuptools = "*"
+moviepy = "*"
 
 [dev-packages]
 
