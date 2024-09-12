@@ -266,3 +266,71 @@ class CartStatsAPIView(generics.RetrieveAPIView):
 
     def calculate_total(self, cart_item):
         return cart_item.total
+    
+
+class CreateOrderAPIView(generics.CreateAPIView):
+    serializer_class = api_serializers.CartOrderSerializer
+    permission_classes = [AllowAny]
+    queryset = api_models.CartOrder.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        payload = request.data
+
+        full_name = payload['full_name']
+        email = payload['email']
+        country = payload['country']
+        cart_id = payload['cart_id']
+        user_id = payload['user_id']
+        
+        if user_id != 0:
+            user = User.objects.get(id=user_id)
+        else:
+            user = None 
+
+        
+        cart_items = api_models.Cart.objects.filter(cart_id=cart_id)
+
+        total_price = Decimal('0.00')
+        total_tax = Decimal('0.00')
+        total_initial_total = Decimal('0.00')
+        total_total = Decimal('0.00')
+
+        order = api_models.CartOrder.objects.create(
+            full_name=full_name,
+            email=email,
+            country=country,
+            student=user
+        )
+
+        for cart_item in cart_items:
+            api_models.CartOrderItem.objects.create(
+                order=order,
+                course=cart_item.course,
+                price=cart_item.price,
+                tax_fee=cart_item.tax_fee,
+                total=cart_item.total,
+                initial_total=cart_item.price,
+                teacher=cart_item.course.teacher,
+            )
+
+            total_price += Decimal(cart_item.price)
+            total_tax += Decimal(cart_item.tax_fee)
+            total_initial_total += Decimal(cart_item.price)
+            total_total += Decimal(cart_item.total)
+
+            order.teachers.add(cart_item.course.teacher)
+
+        order.subtotal = total_price
+        order.tax = total_tax
+        order.initial_total = total_initial_total
+        order.total = total_total
+        order.save()
+        
+        return Response({"message": "Order Created Successfully"}, status=status.HTTP_201_CREATED)
+    
+
+class CheckoutAPIView(generics.RetrieveAPIView):
+    serializer_class = api_serializers.CartOrderSerializer
+    permission_classes = [AllowAny]
+    queryset = api_models.CartOrder.objects.all()
+    lookup_field = 'oid'
