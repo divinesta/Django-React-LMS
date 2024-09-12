@@ -13,7 +13,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'teacher', 'price', 'level', 'featured']
+    list_display = ['id', 'title', 'category', 'teacher', 'price', 'level', 'featured']
 
 @admin.register(Variant)
 class VariantAdmin(admin.ModelAdmin):

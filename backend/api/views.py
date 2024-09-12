@@ -1,4 +1,3 @@
-import random
 from django.shortcuts import render
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -13,6 +12,9 @@ from rest_framework.response import Response
 from api import serializers as api_serializers
 from userauths.models import User, Profile
 from api import models as api_models
+
+import random
+from decimal import Decimal
 
 
 
@@ -123,3 +125,74 @@ class CourseDetailAPIView(generics.RetrieveAPIView):
         slug = self.kwargs['slug']
         course = api_models.Course.objects.get(slug=slug, platform_status="Published", teacher_course_status="Published")
         return course
+
+
+class CartAPIView(generics.CreateAPIView):
+    queryset = api_models.Cart.objects.all()
+    serializer_class = api_serializers.CartSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        payload = request.data
+
+        course_id = payload.get('course_id')
+        user_id = payload.get('user_id')
+        price = payload.get('price')
+        country_name = payload.get('country_name')
+        cart_id = payload.get('cart_id')
+        
+        course = api_models.Course.objects.filter(id=course_id).first()
+        
+        user = User.objects.filter(id=user_id).first()
+
+        country_object = api_models.Country.objects.filter(name=country_name).first()
+        country = country_object.name if country_object else "United States"
+
+        if country_object:
+            tax_rate = country_object.tax_rate / 100
+        else:
+            tax_rate = 0
+
+        cart = api_models.Cart.objects.filter(cart_id=cart_id, course=course).first()
+
+        # if cart:
+        #     cart.course = course
+        #     cart.user = user
+        #     cart.price = price
+        #     cart.tax_fee = Decimal(price) * Decimal(tax_rate)
+        #     cart.country = country
+        #     cart.cart_id = cart_id
+        #     cart.total = Decimal(cart.price) + Decimal(cart.tax_fee)
+        #     cart.save()
+
+        #     return Response({"message": "Cart updated Successfully"}, status=status.HTTP_200_OK)
+            
+        # else:
+        #     cart = api_models.Cart()
+        #     cart.course = course
+        #     cart.user = user
+        #     cart.price = price
+        #     cart.tax_fee = Decimal(price) * Decimal(tax_rate)
+        #     cart.country = country
+        #     cart.cart_id = cart_id
+        #     cart.total_price = Decimal(cart.price) + Decimal(cart.tax_fee)
+        #     cart.save()
+
+        #     return Response({"message": "Cart Created Successfully"}, status=status.HTTP_201_CREATED)
+
+        cart, created = api_models.Cart.objects.update_or_create(
+            cart_id=cart_id,
+            defaults={
+                'course': course,
+                'user': user,
+                'price': price,
+                'tax_fee': Decimal(price) * Decimal(tax_rate),
+                'country': country,
+                'total': Decimal(price) + (Decimal(price) * Decimal(tax_rate))
+            }
+        )
+
+        if created:
+            return Response({"message": "Cart Created Successfully"}, status=status.HTTP_201_CREATED)
+        if cart:
+            return Response({"message": "Cart Updated Successfully"}, status=status.HTTP_200_OK)
