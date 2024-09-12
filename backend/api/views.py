@@ -186,7 +186,7 @@ class CartAPIView(generics.CreateAPIView):
             cart.tax_fee = Decimal(price) * Decimal(tax_rate)
             cart.country = country
             cart.cart_id = cart_id
-            cart.total_price = Decimal(cart.price) + Decimal(cart.tax_fee)
+            cart.total = Decimal(cart.price) + Decimal(cart.tax_fee)
             cart.save()
 
             return Response({"message": "Cart Created Successfully"}, status=status.HTTP_201_CREATED)
@@ -227,3 +227,42 @@ class CartItemDeleteAPIView(generics.DestroyAPIView):
         item_id = self.kwargs['item_id']
         
         return api_models.Cart.objects.filter(id=item_id, cart_id=cart_id).first()
+    
+class CartStatsAPIView(generics.RetrieveAPIView):
+    serializer_class = api_serializers.CartSerializer
+    permission_classes = [AllowAny]
+    lookup_field = 'cart_id'
+
+    def get_queryset(self):
+        cart_id = self.kwargs['cart_id']
+        queryset = api_models.Cart.objects.filter(cart_id=cart_id)
+        return queryset
+    
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+
+        total_price = 0.00
+        total_tax = 0.00
+        total_total = 0.00
+
+        for cart_item in queryset:
+            total_price += float(self.calculate_price(cart_item))
+            total_tax += float(self.calculate_tax(cart_item))
+            total_total += round(float(self.calculate_total(cart_item)), 2)
+
+        data = {
+            "price": total_price,
+            "tax": total_tax,
+            "total": total_total,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    def calculate_price(self, cart_item):
+        return cart_item.price
+
+    def calculate_tax(self, cart_item):
+        return cart_item.tax_fee
+
+    def calculate_total(self, cart_item):
+        return cart_item.total
