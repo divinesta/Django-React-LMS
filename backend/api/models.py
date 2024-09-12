@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
-from django.db.models import Avg
 
 from userauths.models import User, Profile
 from shortuuid.django_fields import ShortUUIDField
@@ -107,14 +106,14 @@ class Course(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     file = models.FileField(upload_to="course-file", null=True, blank=True)
-    image = models.FileField(upload_to="course-file", null=True)
+    image = models.FileField(upload_to="course-file", null=True, blank=True, default="course.jpg")
     title = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     language = models.CharField(max_length=100, choices=LANGUAGE, default="English")
     level = models.CharField(max_length=100, choices=LEVEL, default="Beginner")
     platform_status = models.CharField(max_length=100, choices=PLATFORM_STATUS, default="Published")
-    teacher_course_status = models.CharField(max_length=100, choices=TEACHER_STATUS, default="Draft")
+    teacher_course_status = models.CharField(max_length=100, choices=TEACHER_STATUS, default="Published")
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -132,13 +131,13 @@ class Course(models.Model):
         return EnrolledCourse.objects.filter(course=self)
     
     def curriculum(self):
-        return VariantItem.objects.filter(variant__course=self)
+        return Variant.objects.filter(course=self)
     
     def lectures(self):
         return VariantItem.objects.filter(variant__course=self)
     
     def average_rating(self):
-        average_rating = Review.objects.filter(course=self).aggregate(avg_rating=Avg("rating"))
+        average_rating = Review.objects.filter(course=self).aggregate(avg_rating=models.Avg("rating"))
         return average_rating["avg_rating"]
     
     def rating_count(self):

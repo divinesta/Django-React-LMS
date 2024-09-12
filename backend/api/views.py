@@ -12,6 +12,8 @@ from rest_framework.response import Response
 
 from api import serializers as api_serializers
 from userauths.models import User, Profile
+from api import models as api_models
+
 
 
 # Create your views here.
@@ -97,3 +99,27 @@ class PasswordChangeAPIView(generics.CreateAPIView):
             return Response({"message": "Password changed successfully"}, status=status.HTTP_201_CREATED)
         else:
             return Response({"message": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class CategoryListAPIView(generics.ListAPIView):
+    queryset = api_models.Category.objects.filter(active=True)
+    serializer_class = api_serializers.CategorySerializer
+    permission_classes = [AllowAny]
+    
+
+class CourseListAPIView(generics.ListAPIView):
+    queryset = api_models.Course.objects.filter(platform_status="Published", teacher_course_status="Approved")
+    serializer_class = api_serializers.CourseSerializer
+    permission_classes = [AllowAny]
+
+
+class CourseDetailAPIView(generics.RetrieveAPIView):
+    queryset = api_models.Course.objects.filter(platform_status="Published", teacher_course_status="Published")
+    serializer_class = api_serializers.CourseSerializer
+    permission_classes = [AllowAny]
+    lookup_field = 'slug'
+
+    def get_object(self):
+        slug = self.kwargs['slug']
+        course = api_models.Course.objects.get(slug=slug, platform_status="Published", teacher_course_status="Published")
+        return course

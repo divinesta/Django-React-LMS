@@ -9,7 +9,7 @@ class TeacherAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['title', 'active']
+    list_display = ['title', 'slug', 'active']
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
