@@ -245,7 +245,7 @@ class Cart(models.Model):
 
 class CartOrder(models.Model):
     student = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    teachers = models.ManyToManyField(Teacher, blank=True, related_name="cart_orders")
+    teachers = models.ManyToManyField(Teacher, blank=True)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     tax_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
@@ -254,7 +254,8 @@ class CartOrder(models.Model):
     full_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField(max_length=100, null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
-    coupons = models.ManyToManyField("api.Coupon", blank=True, related_name="cart_orders")
+    coupons = models.ManyToManyField("api.Coupon", blank=True)
+    saved = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     stripe_session_id = models.CharField(max_length=1000, null=True, blank=True)
     oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
     date = models.DateTimeField(default=timezone.now)
@@ -278,7 +279,7 @@ class CartOrderItem(models.Model):
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     initial_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     saved = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    coupons = models.ForeignKey("api.Coupon", on_delete=models.SET_NULL, null=True, blank=True)
+    coupons = models.ManyToManyField("api.Coupon", blank=True)
     applied_coupon = models.BooleanField(default=False)
     oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
     date = models.DateTimeField(default=timezone.now)

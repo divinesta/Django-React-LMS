@@ -334,3 +334,46 @@ class CheckoutAPIView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
     queryset = api_models.CartOrder.objects.all()
     lookup_field = 'oid'
+
+
+class CouponApplyAPIView(generics.CreateAPIView):
+    serializer_class = api_serializers.CouponSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        
+        order_oid = request.data['order_oid']
+        coupon_code = request.data['coupon_code']
+        
+        order = api_models.CartOrder.objects.get(oid=order_oid)
+        coupon = api_models.Coupon.objects.get(code=coupon_code)
+
+        if coupon:
+            order_items = api_models.CartOrderItem.objects.filter(order=order, teacher=coupon.teacher)
+            for order_item in order_items:
+                if not coupon in order_item.coupons.all():
+                    discount = order_item.total * coupon.discount / 100
+
+                    order_item.total -= discount
+                    order_item.price -= discount
+                    order_item.saved += discount
+                    order_item.applied_coupon = True
+                    order_item.coupons.add(coupon)
+
+                    order.coupons.add(coupon)
+                    order.total -= discount
+                    order.subtotal -= discount
+                    order.saved += discount
+                    
+
+                    order_item.save()
+                    order.save()
+                    coupon.used_by.add(order.student)
+
+                    return Response({"message": "Coupon Applied Successfully", "icon": "success"}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"message": "Coupon Already Applied", "icon": "warning"}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({"message": "Coupon Not Found", "icon": "error"}, status=status.HTTP_404_NOT_FOUND)
+
+
