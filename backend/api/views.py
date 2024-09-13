@@ -15,6 +15,7 @@ from api import models as api_models
 
 import stripe
 
+import requests
 import random
 from decimal import Decimal
 
@@ -418,3 +419,17 @@ class StripeCheckoutAPIView(generics.CreateAPIView):
             return redirect(checkout_session.url)
         except stripe.error.StripeError as e:
             return Response({"message": f"Something went wrong. Error: {str(e)}", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_access_token(client_id, secret_key):
+    token_url = "https://api.sandbox.paypal.com/v1/oauth2/token"
+    data = {"grant_type": "client_credentials"}
+    auth = (client_id, secret_key)
+
+    response = requests.post(token_url, data=data, auth=auth)
+        
+    if response.status_code == 200:
+        print("Access Token =================", response.json()['access_token'])
+        return response.json()['access_token']
+    else:
+        raise Exception(f"Failed to get access token from paypal. Status code: {response.status_code}")
