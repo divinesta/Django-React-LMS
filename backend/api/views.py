@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -13,12 +13,15 @@ from api import serializers as api_serializers
 from userauths.models import User, Profile
 from api import models as api_models
 
+import stripe
+
 import random
 from decimal import Decimal
 
 
 # Create your views here.
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializers.MyTokenObtainPairSerializer
@@ -377,3 +380,41 @@ class CouponApplyAPIView(generics.CreateAPIView):
             return Response({"message": "Coupon Not Found", "icon": "error"}, status=status.HTTP_404_NOT_FOUND)
 
 
+class StripeCheckoutAPIView(generics.CreateAPIView):
+    serializer_class = api_serializers.CartOrderSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        
+        order_oid = self.kwargs['order_oid']
+        order = api_models.CartOrder.objects.get(oid=order_oid)
+        
+        if not order:
+            return Response({"message": "Order Not Found", "icon": "error"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                customer_email=order.email,
+                payment_method_types=['card'],
+                line_items=[
+                    {
+                        'price_data': {
+                            'currency': 'usd',
+                            'product_data': {
+                                'name': order.full_name,
+                            },
+                            'unit_amount': int(order.total * 100),
+                        },
+                        'quantity': 1,
+                    }
+                ],
+                mode='payment',
+                success_url=settings.FRONTEND_SITE_URL + '/payment-success/' + order.oid + '?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=settings.FRONTEND_SITE_URL + '/payment-failed/'
+            )
+            # print("Checkout Session =================", checkout_session)
+            order.stripe_session_id = checkout_session.id
+
+            return redirect(checkout_session.url)
+        except stripe.error.StripeError as e:
+            return Response({"message": f"Something went wrong. Error: {str(e)}", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
