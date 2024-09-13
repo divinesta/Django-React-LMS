@@ -54,6 +54,7 @@ NOTIFICATION_TYPE = (
     ("New Review", "New Review"),
     ("New Course Question", "New Course Question"),
     ("Course Published", "Course Published"),
+    ("Course Enrollment Completed", "Course Enrollment Completed"),
 )
 
 class Teacher(models.Model):

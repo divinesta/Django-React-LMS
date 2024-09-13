@@ -468,6 +468,29 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
                     if order.payment_status == "Processing":
                         order.payment_status = "Paid"
                         order.save()
+                        
+                        # Student Notification
+                        api_models.Notification.objects.create(
+                            user=order.student,
+                            order=order,
+                            notification_type="Course Enrollment Completed"
+                        )
+
+                        # Teacher Notification
+                        for order_item in order_items:
+                            api_models.Notification.objects.create(
+                                teacher=order_item.teacher,
+                                order=order,
+                                order_item=order_item,
+                                notification_type="New Order"
+                            )
+                            api_models.EnrolledCourse.objects.create(
+                                course=order_item.course,
+                                teacher=order_item.teacher,
+                                student=order.student,
+                                order_item=order_item,
+                            )
+
 
                         return Response({"message": "Payment Successful", "icon": "success"}, status=status.HTTP_200_OK)
                     else:
@@ -485,10 +508,41 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
                 if order.payment_status == "Processing":
                     order.payment_status = "Paid"
                     order.save()
+
+                    # Student Notification
+                    api_models.Notification.objects.create(
+                        user=order.student,
+                        order=order,
+                        notification_type="Course Enrollment Completed"
+                    )
+
+                    # Teacher Notification
+                    for order_item in order_items:
+                        api_models.Notification.objects.create(
+                            teacher=order_item.teacher,
+                            order=order,
+                            order_item=order_item,
+                            notification_type="New Order"
+                        )
+                        api_models.EnrolledCourse.objects.create(
+                            course=order_item.course,
+                            teacher=order_item.teacher,
+                            student=order.student,
+                            order_item=order_item,
+                        )
+
                     return Response({"message": "Payment Successful", "icon": "success"}, status=status.HTTP_200_OK)
                 else:
                     return Response({"message": "Already Paid", "icon": "warning"}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"message": "Payment Not Successful", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
-                    
-                        
+
+
+class SearchCourseAPIView(generics.ListAPIView):
+    serializer_class = api_serializers.CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        query = self.request.GET.get('query')   
+        queryset = api_models.Course.objects.filter(title__icontains=query, platform_status="Published", teacher_course_status="Approved")
+        return queryset
