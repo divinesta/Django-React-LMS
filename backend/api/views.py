@@ -23,6 +23,8 @@ from decimal import Decimal
 # Create your views here.
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+PAYPAL_CLIENT_ID = settings.PAYPAL_CLIENT_ID
+PAYPAL_SECRET_KEY = settings.PAYPAL_SECRET_KEY
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializers.MyTokenObtainPairSerializer
@@ -433,3 +435,60 @@ def get_access_token(client_id, secret_key):
         return response.json()['access_token']
     else:
         raise Exception(f"Failed to get access token from paypal. Status code: {response.status_code}")
+
+class PaymentSuccessAPIView(generics.CreateAPIView):
+    serializer_class = api_serializers.CartOrderSerializer
+    permission_classes = [AllowAny]
+    queryset = api_models.CartOrder.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        order_oid = self.kwargs['order_oid']
+        session_id = self.kwargs['session_id']
+        paypal_order_id = self.kwargs['paypal_order_id']
+
+        order = api_models.CartOrder.objects.get(oid=order_oid)
+        order_items = api_models.CartOrderItem.objects.filter(order=order)
+
+
+        #Paypal Payment Success
+        if paypal_order_id != "null":
+            paypal_api_url = f"https://api-m.paypal.com/v2/checkout/orders/{paypal_order_id}"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {get_access_token(PAYPAL_CLIENT_ID, PAYPAL_SECRET_KEY)}"
+            }
+
+            response = requests.get(paypal_api_url, headers=headers)
+            
+            if response.status_code == 200:
+                paypal_order_data = response.json()
+                paypal_payment_status = paypal_order_data['status']
+
+                if paypal_payment_status == "COMPLETED":
+                    if order.payment_status == "Processing":
+                        order.payment_status = "Paid"
+                        order.save()
+
+                        return Response({"message": "Payment Successful", "icon": "success"}, status=status.HTTP_200_OK)
+                    else:
+                        return Response({"message": "Already Paid", "icon": "warning"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({"message": "Payment Not Successful", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "Paypal Error Occured", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        #Stripe Payment Success
+        if session_id != "null":
+            session = stripe.checkout.Session.retrieve(session_id)
+
+            if session.payment_status == "paid":
+                if order.payment_status == "Processing":
+                    order.payment_status = "Paid"
+                    order.save()
+                    return Response({"message": "Payment Successful", "icon": "success"}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"message": "Already Paid", "icon": "warning"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "Payment Not Successful", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                        
