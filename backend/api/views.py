@@ -118,7 +118,7 @@ class CategoryListAPIView(generics.ListAPIView):
 
 class CourseListAPIView(generics.ListAPIView):
     queryset = api_models.Course.objects.filter(
-        platform_status="Published", teacher_course_status="Approved")
+        platform_status="Published", teacher_course_status="Published")
     serializer_class = api_serializers.CourseSerializer
     permission_classes = [AllowAny]
 
@@ -544,5 +544,5 @@ class SearchCourseAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         query = self.request.GET.get('query')   
-        queryset = api_models.Course.objects.filter(title__icontains=query, platform_status="Published", teacher_course_status="Approved")
+        queryset = api_models.Course.objects.filter(title__icontains=query, platform_status="Published", teacher_course_status="Published")
         return queryset
