@@ -5,6 +5,8 @@ import useAxios from "../../utils/useAxios";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import moment from "moment";
+import CartId from "../plugin/CartId";
+import GetCurrentAddress from "../plugin/UserCountry";
 import Swal from 'sweetalert2';
 
 const Toast = Swal.mixin({
@@ -20,6 +22,10 @@ const CourseDetail = () => {
    const [isLoading, setIsLoading] = useState(true);
    const [addtocartBtn, setAddtocartBtn] = useState("Add to cart");
 
+   const cart_id = CartId();
+   const country = GetCurrentAddress();
+   // console.log(cart_id)
+   console.log(country.country)
    const param = useParams();
    console.log(param)
 
@@ -36,14 +42,14 @@ const CourseDetail = () => {
       fetchCourseDetail();
    }, []);
 
-   const addToCart = async (courseId, userId, price, country, cartId) => {
+   const addToCart = async (courseId, userId, price, country, cart_id) => {
       setAddtocartBtn("Adding...")
       const formdata = new FormData();
       formdata.append('course_id', courseId);
       formdata.append('user_id', userId);
       formdata.append('price', price);
       formdata.append('country_name', country);
-      formdata.append('cart_id', cartId);
+      formdata.append('cart_id', cart_id);
       try {
          await useAxios().post('course/cart/', formdata).then((res) => {
             console.log(res.data)
@@ -1524,7 +1530,7 @@ const CourseDetail = () => {
                                              {addtocartBtn === "Add to cart" && (
                                                 <button
                                                 type="button"
-                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, "Nigeria", "3456787")}
+                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, country.country, cart_id)}
                                                 className="btn btn-primary mb-0 w-100 me-2"
                                              >
                                                 <i className="fas fa-shopping-cart"></i>{" "}
@@ -1534,7 +1540,7 @@ const CourseDetail = () => {
                                              {addtocartBtn === "Added to cart" && (
                                                 <button
                                                 type="button"
-                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, "Nigeria", "3456787")}
+                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, country.country, cart_id)}
                                                 className="btn btn-primary mb-0 w-100 me-2"
                                              >
                                                 <i className="fas fa-check-circle"></i>{" "}
@@ -1543,8 +1549,9 @@ const CourseDetail = () => {
                                              )}
                                              {addtocartBtn === "Adding..." && (
                                                 <button
+                                                disabled
                                                 type="button"
-                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, "Nigeria", "3456787")}
+                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, country.country, cart_id)}
                                                 className="btn btn-primary mb-0 w-100 me-2"
                                              >
                                                 <i className="fas fa-spinner fa-spin"></i>{" "}
