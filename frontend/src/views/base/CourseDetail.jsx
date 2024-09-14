@@ -5,10 +5,20 @@ import useAxios from "../../utils/useAxios";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import moment from "moment";
+import Swal from 'sweetalert2';
+
+const Toast = Swal.mixin({
+   toast: true,
+   position: 'top',
+   showConfirmButton: false,
+   timer: 3000,
+   timerProgressBar: true,
+})
 
 const CourseDetail = () => {
    const [courseDetail, setCourseDetail] = useState([]);
    const [isLoading, setIsLoading] = useState(true);
+   const [addtocartBtn, setAddtocartBtn] = useState("Add to cart");
 
    const param = useParams();
    console.log(param)
@@ -25,6 +35,30 @@ const CourseDetail = () => {
    useEffect(() => {
       fetchCourseDetail();
    }, []);
+
+   const addToCart = async (courseId, userId, price, country, cartId) => {
+      setAddtocartBtn("Adding...")
+      const formdata = new FormData();
+      formdata.append('course_id', courseId);
+      formdata.append('user_id', userId);
+      formdata.append('price', price);
+      formdata.append('country_name', country);
+      formdata.append('cart_id', cartId);
+      try {
+         await useAxios().post('course/cart/', formdata).then((res) => {
+            console.log(res.data)
+            setAddtocartBtn("Added to cart")
+
+            Toast.fire({
+               icon: 'success',
+               title: res.data.message
+            })
+         });
+      } catch (error) {
+         console.error('Failed to add to cart:', error);
+      }
+   };
+
 
    return (
       <>
@@ -1487,13 +1521,36 @@ const CourseDetail = () => {
                                           </div>
                                           {/* Buttons */}
                                           <div className="mt-3 d-sm-flex justify-content-sm-between ">
-                                             <Link
-                                                to="/cart/"
+                                             {addtocartBtn === "Add to cart" && (
+                                                <button
+                                                type="button"
+                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, "Nigeria", "3456787")}
                                                 className="btn btn-primary mb-0 w-100 me-2"
                                              >
                                                 <i className="fas fa-shopping-cart"></i>{" "}
-                                                Add To Cart
-                                             </Link>
+                                                Add to cart
+                                             </button>
+                                             )}
+                                             {addtocartBtn === "Added to cart" && (
+                                                <button
+                                                type="button"
+                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, "Nigeria", "3456787")}
+                                                className="btn btn-primary mb-0 w-100 me-2"
+                                             >
+                                                <i className="fas fa-check-circle"></i>{" "}
+                                                Added to cart
+                                             </button>
+                                             )}
+                                             {addtocartBtn === "Adding..." && (
+                                                <button
+                                                type="button"
+                                                onClick={() => addToCart(courseDetail.id, 1, courseDetail.price, "Nigeria", "3456787")}
+                                                className="btn btn-primary mb-0 w-100 me-2"
+                                             >
+                                                <i className="fas fa-spinner fa-spin"></i>{" "}
+                                                Adding...
+                                             </button>
+                                             )}
                                              <Link
                                                 to="/cart/"
                                                 className="btn btn-success mb-0 w-100"
