@@ -4,6 +4,7 @@ import { useAuthStore } from "../../store/auth";
 import { login } from "../../utils/auth";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
+import Toast from "../plugin/Toast";
 
 const Login = () => {
 
@@ -36,6 +37,10 @@ const Login = () => {
             navigate("/");
             resetForm();
          }
+         Toast.fire({
+            icon: "success",
+            title: "Logged in successfully",
+         });
          setIsLoading(false);
          // try {
          //    // Replace with actual login logic

@@ -258,7 +258,7 @@ class CartOrder(models.Model):
     coupons = models.ManyToManyField("api.Coupon", blank=True)
     saved = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     stripe_session_id = models.CharField(max_length=1000, null=True, blank=True)
-    oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
     date = models.DateTimeField(default=timezone.now)
     
     def __str__(self):

@@ -1,6 +1,6 @@
 const CartId = () => {
    const generateRandomString = () => {
-      const length = 30;
+      const length = 15;
       const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       let randomString = "";
 
@@ -16,6 +16,8 @@ const CartId = () => {
    };
 
    let existingRandomString = localStorage.getItem("randomString");
+
+   console.log("existingRandomString ===========", existingRandomString)
    if (!existingRandomString) {
       generateRandomString();
       // return existingRandomString

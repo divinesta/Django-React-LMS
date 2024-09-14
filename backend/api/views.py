@@ -161,8 +161,7 @@ class CartAPIView(generics.CreateAPIView):
 
         user = User.objects.filter(id=user_id).first()
 
-        country_object = api_models.Country.objects.filter(
-            name=country_name).first()
+        country_object = api_models.Country.objects.filter(name__iexact=country_name).first()
         country = country_object.name if country_object else "Unknown Country"
 
         if country_object:

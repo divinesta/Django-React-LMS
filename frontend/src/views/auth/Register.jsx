@@ -4,6 +4,7 @@ import { register } from "../../utils/auth";
 import { useAuthStore } from "../../store/auth";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
+import Toast from "../plugin/Toast";
 
 const Register = () => {
    const navigate = useNavigate();
@@ -31,6 +32,10 @@ const Register = () => {
       } else {
          navigate("/");
       }
+      Toast.fire({
+         icon: "success",
+         title: "Registered successfully",
+      });
       setIsLoading(false);
    };
 

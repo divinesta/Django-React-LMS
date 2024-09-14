@@ -3,16 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import apiInstance from "../../utils/axios";
-import Swal from "sweetalert2";
-
-const Toast = Swal.mixin({
-   toast: true,
-   position: "top",
-   showConfirmButton: false,
-   timer: 3000,
-   timerProgressBar: true,
-});
-
+import Toast from "../plugin/Toast";
 
 function CreateNewPassword() {
    const navigate = useNavigate();
