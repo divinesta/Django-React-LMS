@@ -19,11 +19,13 @@ const Index = () => {
             .then((res) => {
                setCourses(res.data);
                setIsLoading(false);
+               console.log(res.data)
             });
       } catch (error) {
          console.log(error);
       }
    };
+   // console.log(courses[0].slug)
 
    useEffect(() => {
       fetchCourse();
@@ -166,7 +168,7 @@ const Index = () => {
                            <div className="col" key={index}>
                               {/* Card */}
                               <div className="card card-hover">
-                                 <Link to={`/course-detail/slug/`}>
+                                 <Link to={`/course-detail/${course.slug}/`}>
                                     <img
                                        src={course?.image}
                                        alt="course"
@@ -195,7 +197,7 @@ const Index = () => {
                                     </div>
                                     <h4 className="mb-2 text-truncate-line-2 ">
                                        <Link
-                                          to={`/course-detail/slug/`}
+                                          to={`/course-detail/${course.slug}/`}
                                           className="text-inherit text-decoration-none text-dark fs-5"
                                        >
                                           {course?.title}

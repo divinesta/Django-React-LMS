@@ -71,8 +71,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.Teacher
-        fields = ["user", "image", "full_name", "bio", "facebook", "twitter",
-                  "linkedin", "about", "country", "students", "courses", "review"]
+        fields = ["user", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country", "students", "courses", "review"]
 
 
 class VariantItemSerializer(serializers.ModelSerializer):
