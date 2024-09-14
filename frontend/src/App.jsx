@@ -11,6 +11,8 @@ import CreateNewPassword from "./views/auth/CreateNewPassword"
 
 import Index from "./views/base/Index";
 import CourseDetail from "./views/base/CourseDetail";
+import Cart from "./views/base/Cart";
+
 
 const App = () => {
    return (
@@ -26,6 +28,7 @@ const App = () => {
                {/* Base Routes */}
                <Route path="/" element={<Index />} />
                <Route path="/course-detail/:slug/" element={<CourseDetail />} />
+               <Route path="/cart/" element={<Cart />} />
             </Routes>
          </MainWrapper>
       </BrowserRouter>

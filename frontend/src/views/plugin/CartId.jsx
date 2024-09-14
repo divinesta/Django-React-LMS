@@ -17,7 +17,7 @@ const CartId = () => {
 
    let existingRandomString = localStorage.getItem("randomString");
 
-   console.log("existingRandomString ===========", existingRandomString)
+   // console.log("existingRandomString ===========", existingRandomString)
    if (!existingRandomString) {
       generateRandomString();
       // return existingRandomString
