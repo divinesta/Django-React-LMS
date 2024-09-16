@@ -1,15 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import { Link } from "react-router-dom";
 import Rater from "react-rater";
 import "react-rater/lib/react-rater.css";
 import useAxios from "../../utils/useAxios";
-// import apiInstance from '../../utils/axios'
+import apiInstance from '../../utils/axios';
+import Toast from "../plugin/Toast";
+import CartId from "../plugin/CartId";
+import GetCurrentAddress from "../plugin/UserCountry";
+import UserData from "../plugin/UserData";
+import { CartContext } from "../plugin/Context";
 
 const Index = () => {
    const [courses, setCourses] = useState([]);
+   const [addtocartBtn, setAddtocartBtn] = useState("Add to cart");
    const [isLoading, setIsLoading] = useState(true);
+   const [cartCount, setCartCount] = useContext(CartContext);
+
+   const cart_id = CartId();
+   const country = GetCurrentAddress();
+   const userData = UserData();
 
    const fetchCourse = async () => {
       setIsLoading(true);
@@ -30,6 +41,37 @@ const Index = () => {
    useEffect(() => {
       fetchCourse();
    }, []);
+
+   const addToCart = async (courseId, userId, price, country, cart_id) => {
+      setAddtocartBtn("Adding...");
+      const formdata = new FormData();
+      formdata.append("course_id", courseId);
+      formdata.append("user_id", userId);
+      formdata.append("price", price);
+      formdata.append("country_name", country);
+      formdata.append("cart_id", cart_id);
+      try {
+         await useAxios()
+            .post("course/cart/", formdata)
+            .then((res) => {
+               setAddtocartBtn("Added to cart");
+               // console.log(res.data)
+               // console.log("country ==========", country)
+               Toast.fire({
+                  icon: "success",
+                  title: res.data.message,
+               });
+
+               //Update cart count
+               apiInstance.get(`course/cart-list/${cart_id}/`).then((res) => {
+                  setCartCount(res.data?.length);
+               });
+               //setCartCount(cartCount + 1);
+            });
+      } catch (error) {
+         console.error("Failed to add to cart:", error);
+      }
+   };
 
    return (
       <>
@@ -215,7 +257,12 @@ const Index = () => {
                                     <div className="lh-1 mt-3 d-flex">
                                        <span className="align-text-top">
                                           <span className="fs-6">
-                                             <Rater total={5} rating={course.average_rating || 0} />
+                                             <Rater
+                                                total={5}
+                                                rating={
+                                                   course.average_rating || 0
+                                                }
+                                             />
                                           </span>
                                        </span>
                                        <span className="text-warning">4.5</span>
@@ -228,10 +275,21 @@ const Index = () => {
                                  <div className="card-footer">
                                     <div className="row align-items-center g-0">
                                        <div className="col">
-                                          <h5 className="mb-0">${course.price}</h5>
+                                          <h5 className="mb-0">
+                                             ${course.price}
+                                          </h5>
                                        </div>
                                        <div className="col-auto">
                                           <button
+                                             onClick={() =>
+                                                addToCart(
+                                                   course.id,
+                                                   userData.user_id,
+                                                   course.price,
+                                                   country.country,
+                                                   cart_id
+                                                )
+                                             }
                                              type="button"
                                              className="text-inherit text-decoration-none btn btn-primary me-2"
                                           >
