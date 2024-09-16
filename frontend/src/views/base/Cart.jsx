@@ -11,6 +11,11 @@ const Cart = () => {
    const [cart, setCart] = useState([]);
    const [cartStats, setCartStats] = useState([]);
    const [cartCount, setCartCount] = useContext(CartContext);
+   const [bioData, setBioData] = useState({
+      full_name: "",
+      email: "",
+      country: "",
+   });
    const cart_id = CartId();
 
    const fetchCartItems = async () => {
@@ -32,6 +37,7 @@ const Cart = () => {
    useEffect(() => {
       fetchCartItems();
    }, [])
+
 
    const cartItemDelete = async (e, item_id) => {
       e.preventDefault();
@@ -57,6 +63,13 @@ const Cart = () => {
    useEffect(() => {
       fetchCartItems();
    }, []);
+
+   const handleBioDataChange = (event) => {
+      setBioData({
+         ...bioData,
+         [event.target.name]: event.target.value,
+      });
+   };
 
    return (
       <>
@@ -183,13 +196,15 @@ const Cart = () => {
                                     htmlFor="yourName"
                                     className="form-label"
                                  >
-                                    Your name *
+                                    Your Full Name
                                  </label>
                                  <input
                                     type="text"
                                     className="form-control"
                                     id="yourName"
                                     placeholder="Name"
+                                    value={bioData.full_name}
+                                    onChange={handleBioDataChange}
                                  />
                               </div>
                               {/* Email */}
@@ -205,6 +220,8 @@ const Cart = () => {
                                     className="form-control"
                                     id="emailInput"
                                     placeholder="Email"
+                                    value={bioData.email}
+                                    onChange={handleBioDataChange}
                                  />
                               </div>
 
@@ -214,13 +231,15 @@ const Cart = () => {
                                     htmlFor="mobileNumber"
                                     className="form-label"
                                  >
-                                    Select country *
+                                    Enter country
                                  </label>
                                  <input
                                     type="text"
                                     className="form-control"
                                     id="mobileNumber"
                                     placeholder="Country"
+                                    value={bioData.country}
+                                    onChange={handleBioDataChange}
                                  />
                               </div>
                            </div>
