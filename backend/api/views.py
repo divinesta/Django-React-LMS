@@ -377,7 +377,7 @@ class CouponApplyAPIView(generics.CreateAPIView):
 
                     return Response({"message": "Coupon Applied Successfully", "icon": "success"}, status=status.HTTP_200_OK)
                 else:
-                    return Response({"message": "Coupon Already Applied", "icon": "warning"}, status=status.HTTP_403_FORBIDDEN)
+                    return Response({"message": "Coupon Already Applied", "icon": "warning"}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "Coupon Not Found", "icon": "error"}, status=status.HTTP_404_NOT_FOUND)
 

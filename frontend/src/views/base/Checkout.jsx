@@ -11,6 +11,9 @@ import { userId } from "../../utils/constants";
 function Checkout() {
 
    const [order, setOrder] = useState([])
+   const [coupon, setCoupon] = useState("")
+   // console.log(coupon);
+   
    const param = useParams()
 
    const fetchOrder = async () => {
@@ -27,6 +30,32 @@ function Checkout() {
    useEffect(() => {
       fetchOrder()
    },[])
+
+   const applyCoupon = async () => {
+      const formdata = new FormData();
+      formdata.append("order_oid", order?.oid);
+      formdata.append("coupon_code", coupon);
+
+      try {
+         await apiInstance.post(`order/coupon/`, formdata).then((res) => {
+            console.log(res.data);
+            fetchOrder();
+            Toast.fire({
+               icon: res.data.icon,
+               title: res.data.message,
+            });
+         });
+      } catch (error) {
+         if (
+            error.response.data.includes("Coupon matching query does not exist")
+         ) {
+            Toast.fire({
+               icon: "error",
+               title: "Coupon does not exist",
+            });
+         }
+      }
+   };
 
    return (
       <>
@@ -221,8 +250,10 @@ function Checkout() {
                                  <input
                                     className="form-control form-control"
                                     placeholder="COUPON CODE"
+                                    onChange={(e) => setCoupon(e.target.value)}
                                  />
                                  <button
+                                    onClick={applyCoupon}
                                     type="button"
                                     className="btn btn-primary"
                                  >
@@ -247,7 +278,9 @@ function Checkout() {
                                     </li>
                                     <li class="list-group-item d-flex fw-bold justify-content-between align-items-center">
                                        Total
-                                       <span className="fw-bold">₦{order.total}</span>
+                                       <span className="fw-bold">
+                                          ₦{order.total}
+                                       </span>
                                     </li>
                                  </ul>
                                  <div className="d-grid">
