@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import useAxios from "../../utils/useAxios";
+import apiInstance from "../../utils/axios";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import moment from "moment";
@@ -9,11 +10,13 @@ import CartId from "../plugin/CartId";
 import GetCurrentAddress from "../plugin/UserCountry";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import { CartContext } from "../plugin/Context";
 
 const CourseDetail = () => {
    const [courseDetail, setCourseDetail] = useState([]);
    const [isLoading, setIsLoading] = useState(true);
    const [addtocartBtn, setAddtocartBtn] = useState("Add to cart");
+   const [cartCount, setCartCount] = useContext(CartContext);
 
    const cart_id = CartId();
    // console.log("cart_id ===========", cart_id)
@@ -50,12 +53,18 @@ const CourseDetail = () => {
       try {
          await useAxios().post('course/cart/', formdata).then((res) => {
             setAddtocartBtn("Added to cart")
-            console.log(res.data)
+            // console.log(res.data)
             // console.log("country ==========", country)
             Toast.fire({
                icon: 'success',
                title: res.data.message
             })
+
+            // Update cart count
+            // apiInstance.get(`course/cart-list/${cart_id}/`).then((res) => {
+            //    setCartCount(res.data?.length);
+            // });
+            setCartCount(cartCount + 1)
          });
       } catch (error) {
          console.error('Failed to add to cart:', error);

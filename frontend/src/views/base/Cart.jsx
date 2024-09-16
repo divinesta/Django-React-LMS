@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
-
+import { CartContext } from "../plugin/Context";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import apiInstance from "../../utils/axios";
@@ -10,7 +10,7 @@ import Toast from "../plugin/Toast";
 const Cart = () => {
    const [cart, setCart] = useState([]);
    const [cartStats, setCartStats] = useState([]);
-
+   const [cartCount, setCartCount] = useContext(CartContext);
    const cart_id = CartId();
 
    const fetchCartItems = async () => {
@@ -29,17 +29,25 @@ const Cart = () => {
       }
    };
 
-   const cartItemDelete = async (item_id) => {
+   useEffect(() => {
+      fetchCartItems();
+   }, [])
+
+   const cartItemDelete = async (e, item_id) => {
+      e.preventDefault();
       try {
          await apiInstance
             .delete(`course/cart-item-delete/${cart_id}/${item_id}/`)
             .then((res) => {
-               console.log(res);
+               console.log(res.data);
                fetchCartItems();
                Toast.fire({
                   icon: "success",
                   title: "Item removed from cart",
                });
+
+               setCartCount(cartCount - 1);
+               // setCartCount(cart?.length);
             });
       } catch (error) {
          console.log(error);
@@ -148,8 +156,8 @@ const Cart = () => {
                                           </td>
                                           <td>
                                              <button
-                                                onClick={() =>
-                                                   cartItemDelete(c.id)
+                                                onClick={(e) =>
+                                                   cartItemDelete(e, c.id)
                                                 }
                                                 className="btn btn-sm btn-danger px-2 mb-0"
                                              >
