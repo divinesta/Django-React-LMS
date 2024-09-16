@@ -6,7 +6,7 @@ from userauths.models import User, Profile
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['email', 'username', 'full_name', 'otp']
+    list_display = ['id', 'email', 'username', 'full_name', 'otp']
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):

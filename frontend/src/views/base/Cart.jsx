@@ -1,11 +1,12 @@
 import { useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "../plugin/Context";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import apiInstance from "../../utils/axios";
 import CartId from "../plugin/CartId";
 import Toast from "../plugin/Toast";
+import { userId } from "../../utils/constants";
 
 const Cart = () => {
    const [cart, setCart] = useState([]);
@@ -17,17 +18,18 @@ const Cart = () => {
       country: "",
    });
    const cart_id = CartId();
+   const navigate = useNavigate()
 
    const fetchCartItems = async () => {
       try {
          await apiInstance.get(`course/cart-list/${cart_id}/`).then((res) => {
             setCart(res.data);
-            console.log(res.data);
+            // console.log(res.data);
          });
 
          await apiInstance.get(`cart/stats/${cart_id}/`).then((res) => {
             setCartStats(res.data);
-            console.log(res.data);
+            // console.log(res.data);
          });
       } catch (error) {
          console.log(error);
@@ -69,6 +71,30 @@ const Cart = () => {
          ...bioData,
          [event.target.name]: event.target.value,
       });
+   };
+
+   const createOrder = async (e) => {
+      e.preventDefault();
+      const formdata = new FormData();
+      formdata.append("full_name", bioData.full_name);
+      formdata.append("email", bioData.email);
+      formdata.append("country", bioData.country);
+      formdata.append("cart_id", cart_id);
+      formdata.append("user_id", userId);
+
+      try {
+         await apiInstance.post(`order/create-order/`, formdata).then((res) => {
+            console.log(res.data);
+            navigate(`/checkout/${res.data.order_oid}/`);
+
+            Toast.fire({
+               icon: "success",
+               title: "Order created successfully.",  
+            })
+         });
+      } catch (error) {
+         console.log(error);
+      }
    };
 
    return (
@@ -118,7 +144,7 @@ const Cart = () => {
 
          <section className="pt-5">
             <div className="container">
-               <form>
+               <form onSubmit={createOrder}>
                   <div className="row g-4 g-sm-5">
                      {/* Main content START */}
                      <div className="col-lg-8 mb-4 mb-sm-0">
@@ -203,6 +229,7 @@ const Cart = () => {
                                     className="form-control"
                                     id="yourName"
                                     placeholder="Name"
+                                    name="full_name"
                                     value={bioData.full_name}
                                     onChange={handleBioDataChange}
                                  />
@@ -220,6 +247,7 @@ const Cart = () => {
                                     className="form-control"
                                     id="emailInput"
                                     placeholder="Email"
+                                    name="email"
                                     value={bioData.email}
                                     onChange={handleBioDataChange}
                                  />
@@ -238,6 +266,7 @@ const Cart = () => {
                                     className="form-control"
                                     id="mobileNumber"
                                     placeholder="Country"
+                                    name="country"
                                     value={bioData.country}
                                     onChange={handleBioDataChange}
                                  />
@@ -267,12 +296,13 @@ const Cart = () => {
                               </li>
                            </ul>
                            <div className="d-grid">
-                              <Link
+                              <button 
+                                 type="submit"
                                  to={`/checkout/`}
                                  className="btn btn-lg btn-success"
                               >
                                  Proceed to Checkout
-                              </Link>
+                              </button>
                            </div>
                            <p className="small mb-0 mt-2 text-center">
                               By proceeding to checkout, you agree to these{" "}
