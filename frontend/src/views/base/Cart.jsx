@@ -5,6 +5,7 @@ import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import apiInstance from "../../utils/axios";
 import CartId from "../plugin/CartId";
+import Toast from "../plugin/Toast";
 
 const Cart = () => {
    const [cart, setCart] = useState([]);
@@ -23,6 +24,23 @@ const Cart = () => {
             setCartStats(res.data);
             console.log(res.data);
          });
+      } catch (error) {
+         console.log(error);
+      }
+   };
+
+   const cartItemDelete = async (item_id) => {
+      try {
+         await apiInstance
+            .delete(`course/cart-item-delete/${cart_id}/${item_id}/`)
+            .then((res) => {
+               console.log(res);
+               fetchCartItems();
+               Toast.fire({
+                  icon: "success",
+                  title: "Item removed from cart",
+               });
+            });
       } catch (error) {
          console.log(error);
       }
@@ -88,6 +106,12 @@ const Cart = () => {
                               Cart Items ({cart.length})
                            </h5>
 
+                           {cart?.length < 1 && (
+                              <h4 className="mt-4 p-3 text-center">
+                                 Cart is empty
+                              </h4>
+                           )}
+
                            <div className="table-responsive border-0 rounded-3">
                               <table className="table align-middle p-4 mb-0">
                                  <tbody className="border-top-2">
@@ -123,7 +147,12 @@ const Cart = () => {
                                              </h5>
                                           </td>
                                           <td>
-                                             <button className="btn btn-sm btn-danger px-2 mb-0">
+                                             <button
+                                                onClick={() =>
+                                                   cartItemDelete(c.id)
+                                                }
+                                                className="btn btn-sm btn-danger px-2 mb-0"
+                                             >
                                                 <i className="fas fa-fw fa-times" />
                                              </button>
                                           </td>
