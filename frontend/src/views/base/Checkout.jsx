@@ -6,13 +6,19 @@ import BaseFooter from "../partials/BaseFooter";
 import apiInstance from "../../utils/axios";
 import CartId from "../plugin/CartId";
 import Toast from "../plugin/Toast";
+import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js"
 import { userId } from "../../utils/constants";
+import { PAYPAL_CLIENT_ID } from "../../utils/constants";
 
-function Checkout() {
+const Checkout = () => {
 
    const [order, setOrder] = useState([])
    const [coupon, setCoupon] = useState("")
+
+   const [paymentLoading, setPaymentLoading] = useState(false);
    // console.log(coupon);
+
+   const navigate = useNavigate()
    
    const param = useParams()
 
@@ -56,6 +62,17 @@ function Checkout() {
          }
       }
    };
+
+   const initialOptions = {
+      clientId: PAYPAL_CLIENT_ID,
+      currency: "USD",
+      intent: "capture",
+   };
+
+   const payWithStripe = (event) => {
+      setPaymentLoading(true);
+      event.target.form.submit();
+   }
 
    return (
       <>
@@ -284,20 +301,72 @@ function Checkout() {
                                     </li>
                                  </ul>
                                  <div className="d-grid">
-                                    <Link
-                                       to={`/success/txn_id/`}
-                                       className="btn btn-lg btn-success mt-2"
+                                    <form
+                                       action={`http://127.0.0.1:8000/api/v1/payment/stripe-checkout/${order.oid}/`}
+                                       className="w-100"
+                                       method="POST"
                                     >
-                                       {" "}
-                                       Pay With PayPal
-                                    </Link>
-                                    <Link
-                                       to={`/success/txn_id/`}
-                                       className="btn btn-lg btn-success mt-2"
+                                       {paymentLoading ? (
+                                          <button
+                                             type="submit"
+                                             disabled
+                                             className="btn btn-lg btn-success mt-2 w-100"
+                                          >
+                                             {" "}
+                                             Processing{" "}
+                                             <i className="fas fa-spinner fa-spin"></i>
+                                          </button>
+                                       ) : (
+                                          <button
+                                             type="submit"
+                                             onClick={payWithStripe}
+                                             className="btn btn-lg btn-success mt-2 w-100"
+                                          >
+                                             {" "}
+                                             Pay With Stripe
+                                          </button>
+                                       )}
+                                    </form>
+
+                                    <PayPalScriptProvider
+                                       options={initialOptions}
                                     >
-                                       {" "}
-                                       Pay With Stripe
-                                    </Link>
+                                       <PayPalButtons
+                                          className="mt-3"
+                                          createOrder={(data, actions) => {
+                                             return actions.order.create({
+                                                purchase_units: [
+                                                   {
+                                                      amount: {
+                                                         currency_code: "USD",
+                                                         value: order.total.toString(),
+                                                      },
+                                                   },
+                                                ],
+                                             });
+                                          }}
+                                          onApprove={(data, actions) => {
+                                             const details =
+                                                actions.order.capture();
+                                             const name =
+                                                details.payment_source.paypal
+                                                   .name.full_name;
+                                             const status = details.status;
+                                             const paypal_order_id =
+                                                data.orderID;
+
+                                             // console.log(name);
+                                             // console.log(status);
+                                             // console.log(paypal_order_id);
+
+                                             if (status === "COMPLETED") {
+                                                navigate(
+                                                   `/payment-success/${order.oid}/?paypal_order_id=${paypal_order_id}`
+                                                );
+                                             }
+                                          }}
+                                       />
+                                    </PayPalScriptProvider>
                                  </div>
                                  <p className="small mb-0 mt-2 text-center">
                                     By proceeding to payment, you agree to these{" "}

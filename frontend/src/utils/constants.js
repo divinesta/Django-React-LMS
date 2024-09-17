@@ -8,3 +8,4 @@ const teacher_id = UserData()?.teacher_id
 export const API_BASE_URL = "http://127.0.0.1:8000/api/v1/";
 export const userId = user_id;
 export const teacherId = teacher_id
+export const PAYPAL_CLIENT_ID = "test"
