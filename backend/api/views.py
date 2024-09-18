@@ -441,9 +441,9 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
     queryset = api_models.CartOrder.objects.all()
 
     def create(self, request, *args, **kwargs):
-        order_oid = self.kwargs['order_oid']
-        session_id = self.kwargs['session_id']
-        paypal_order_id = self.kwargs['paypal_order_id']
+        order_oid = request.data['order_oid']
+        session_id = request.data['session_id']
+        paypal_order_id = request.data['paypal_order_id']
 
         order = api_models.CartOrder.objects.get(oid=order_oid)
         order_items = api_models.CartOrderItem.objects.filter(order=order)
@@ -486,7 +486,7 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
                             api_models.EnrolledCourse.objects.create(
                                 course=order_item.course,
                                 teacher=order_item.teacher,
-                                student=order.student,
+                                user=order.student,
                                 order_item=order_item,
                             )
 
@@ -495,7 +495,7 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
                     else:
                         return Response({"message": "Already Paid", "icon": "warning"}, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    return Response({"message": "Payment Not Successful", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message": "Payment Failed", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"message": "Paypal Error Occured", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -526,7 +526,7 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
                         api_models.EnrolledCourse.objects.create(
                             course=order_item.course,
                             teacher=order_item.teacher,
-                            student=order.student,
+                            user=order.student,
                             order_item=order_item,
                         )
 
