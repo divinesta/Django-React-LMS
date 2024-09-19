@@ -569,3 +569,15 @@ class StudentSummaryAPIView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK) 
+    
+    
+class StudentCourseListAPIView(generics.ListAPIView):
+    serializer_class = api_serializers.EnrolledCourseSerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        user = User.objects.get(id=user_id)
+        
+        queryset = api_models.EnrolledCourse.objects.filter(user=user)
+        return queryset
