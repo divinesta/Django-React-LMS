@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.contrib.auth.hashers import check_password
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics, status
@@ -109,6 +110,29 @@ class PasswordChangeAPIView(generics.CreateAPIView):
         else:
             return Response({"message": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
+
+class ChangePasswordAPIView(generics.CreateAPIView):
+    serializer_class = api_serializers.UserSerializer
+    permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        user_id = request.data['user_id']
+        
+        old_password = request.data['old_password']
+        new_password = request.data['new_password']
+        
+        user = User.objects.get(id=user_id)
+        if user is not None:
+            if check_password(old_password, user.password):
+                user.set_password(new_password)
+                user.save()
+                return Response({"message": "Password Changed Successfully", "icon": "success"}, status=status.HTTP_200_OK)
+            
+            else:
+                return Response({"message": "Old Password is Incorrect", "icon": "warning"}, status=status.HTTP_200_OK)
+            
+        else:
+            return Response({"message": "User Not Found", "icon": "error"}, status=status.HTTP_404_NOT_FOUND)
 
 class CategoryListAPIView(generics.ListAPIView):
     queryset = api_models.Category.objects.filter(active=True)
@@ -618,3 +642,21 @@ class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
         else:
             api_models.CompletedLesson.objects.create(user=user, course=course, variant_item=variant_item)
             return Response({"message": "Course marked as Completed"}, status=status.HTTP_201_CREATED)
+
+
+class StudentNoteCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = api_serializers.NoteSerializer
+    permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        user_id = request.data['user_id']
+        enrollment_id = request.data['enrollment_id']
+        title = request.data['title']
+        note = request.data['note']
+        
+        user = User.objects.get(id=user_id)
+        enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+        
+        api_models.Note.objects.create(user=user, course=enrolled.course, title=title, note=note)
+        
+        return Response({"message": "Note Created Successfully"}, status=status.HTTP_201_CREATED)
