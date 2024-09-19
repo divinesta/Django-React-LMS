@@ -26,4 +26,8 @@ urlpatterns = [
       path('order/coupon/', api_views.CouponApplyAPIView.as_view()),
       path('payment/stripe-checkout/<order_oid>/', api_views.StripeCheckoutAPIView.as_view()),
       path('payment/payment-success/', api_views.PaymentSuccessAPIView.as_view()),
+      
+      
+      #Student API Endpoints
+      path('student/summary/<user_id>/', api_views.StudentSummaryAPIView.as_view()),
 ]
