@@ -648,6 +648,15 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
     serializer_class = api_serializers.NoteSerializer
     permission_classes = [AllowAny]
     
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        enrollment_id = self.kwargs['enrollment_id']
+        
+        user = User.objects.get(id=user_id)
+        enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+        
+        return api_models.Note.objects.filter(user=user, course=enrolled.course)
+    
     def create(self, request, *args, **kwargs):
         user_id = request.data['user_id']
         enrollment_id = request.data['enrollment_id']
