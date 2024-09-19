@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import Rater from "react-rater";
 import "react-rater/lib/react-rater.css";
 import useAxios from "../../utils/useAxios";
-import apiInstance from '../../utils/axios';
+import apiInstance from "../../utils/axios";
 import Toast from "../plugin/Toast";
 import CartId from "../plugin/CartId";
 import GetCurrentAddress from "../plugin/UserCountry";
@@ -30,7 +30,7 @@ const Index = () => {
             .then((res) => {
                setCourses(res.data);
                setIsLoading(false);
-               console.log(res.data)
+               console.log(res.data);
             });
       } catch (error) {
          console.log(error);
@@ -72,6 +72,18 @@ const Index = () => {
          console.error("Failed to add to cart:", error);
       }
    };
+
+   //Pagination
+   const itemsPerPage = 1;
+   const [currentPage, setCurrentPage] = useState(1);
+   const indexOfLastItem = currentPage * itemsPerPage;
+   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+   const currentItems = courses?.slice(indexOfFirstItem, indexOfLastItem);
+   const totalPages = Math.ceil(courses?.length / itemsPerPage);
+   const pageNumbers = Array.from(
+      { length: totalPages },
+      (_, index) => index + 1
+   );
 
    return (
       <>
@@ -206,7 +218,7 @@ const Index = () => {
                <div className="row">
                   <div className="col-md-12">
                      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-                        {courses?.map((course, index) => (
+                        {currentItems?.map((course, index) => (
                            <div className="col" key={index}>
                               {/* Card */}
                               <div className="card card-hover">
@@ -308,47 +320,56 @@ const Index = () => {
                               </div>
                            </div>
                         ))}
-
-                        {/* 
-                                <nav className="d-flex mt-5">
-                                  <ul className="pagination">
-                                    <li
-                                      className=""
-                                    >
-                                      <button
-                                        className="page-link me-1"
-                                      >
-                                        <i className="ci-arrow-left me-2" />
-                                        Previous
-                                      </button>
-                                    </li>
-                                  </ul>
-                                  <ul className="pagination">
-                                    <li
-                                        key={1}
-                                        className="active"
-                                      >
-                                        <button
-                                          className="page-link"
-                                        >
-                                          1
-                                        </button>
-                                      </li>
-                                  </ul>
-                                  <ul className="pagination">
-                                    <li
-                                      className={`totalPages`}
-                                    >
-                                      <button
-                                        className="page-link ms-1"
-                                      >
-                                        Next
-                                        <i className="ci-arrow-right ms-3" />
-                                      </button>
-                                    </li>
-                                  </ul>
-                                </nav> */}
                      </div>
+                     <nav className="d-flex mt-5">
+                        <ul className="pagination">
+                           <li
+                              className={`page-item ${
+                                 currentPage === 1 ? "disabled" : ""
+                              }`}
+                           >
+                              <button
+                                 className="page-link me-1"
+                                 onClick={() => setCurrentPage(currentPage - 1)}
+                              >
+                                 <i className="ci-arrow-left me-2" />
+                                 Previous
+                              </button>
+                           </li>
+                        </ul>
+                        <ul className="pagination">
+                           {pageNumbers.map((number) => (
+                              <li
+                                 key={number}
+                                 className={`page-item ${
+                                    currentPage === number ? "active" : ""
+                                 }`}
+                              >
+                                 <button
+                                    className="page-link"
+                                    onClick={() => setCurrentPage(number)}
+                                 >
+                                    {number}
+                                 </button>
+                              </li>
+                           ))}
+                        </ul>
+                        <ul className="pagination">
+                           <li
+                              className={`page-item ${
+                                 currentPage === totalPages ? "disabled" : ""
+                              }`}
+                           >
+                              <button
+                                 className="page-link ms-1"
+                                 onClick={() => setCurrentPage(currentPage + 1)}
+                              >
+                                 Next
+                                 <i className="ci-arrow-right ms-3" />
+                              </button>
+                           </li>
+                        </ul>
+                     </nav>
                   </div>
                </div>
             </div>
