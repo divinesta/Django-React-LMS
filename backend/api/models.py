@@ -323,7 +323,7 @@ class EnrolledCourse(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
     order_item = models.ForeignKey(CartOrderItem, on_delete=models.CASCADE)
-    enrolled_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
+    enrollment_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="abcdefghijklmn0123456789")
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
