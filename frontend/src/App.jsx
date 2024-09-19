@@ -16,6 +16,7 @@ import CourseDetail from "./views/base/CourseDetail";
 import Cart from "./views/base/Cart";
 import Checkout from "./views/base/Checkout"
 import Success from "./views/base/Success";
+import Search from "./views/base/Search";
 
 const App = () => {
    const cart_id = CartId();
@@ -52,6 +53,7 @@ const App = () => {
                   <Route path="/cart/" element={<Cart />} />
                   <Route path="/checkout/:order_oid/" element={<Checkout />} />
                   <Route path="/payment-success/:order_oid/" element={<Success />} />
+                  <Route path="/search/" element={<Search />} />
                </Routes>
             </MainWrapper>
          </BrowserRouter>
