@@ -17,6 +17,9 @@ import Cart from "./views/base/Cart";
 import Checkout from "./views/base/Checkout"
 import Success from "./views/base/Success";
 import Search from "./views/base/Search";
+
+// Student Routes
+import StudentDashboard from "./views/student/Dashboard"
 import StudentChangePassword from "./views/student/ChangePassword";
 
 const App = () => {
@@ -58,10 +61,10 @@ const App = () => {
                      element={<Success />}
                   />
                   <Route path="/search/" element={<Search />} />
-                  <Route
-                     path="/student/change-password/"
-                     element={<StudentChangePassword />}
-                  />
+
+                  {/* Student Routes */}
+                  <Route path="/student/dashboard/" element={<StudentDashboard />}/>
+                  <Route path="/student/change-password/" element={<StudentChangePassword />} />
                </Routes>
             </MainWrapper>
          </BrowserRouter>
