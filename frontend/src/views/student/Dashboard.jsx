@@ -21,6 +21,7 @@ const Dashboard = () => {
          .then((res) => {
             console.log(res.data[0]);
             setStats(res.data[0]);
+            setFetching(false)
          });
 
       useAxios()
@@ -35,6 +36,19 @@ const Dashboard = () => {
    useEffect(() => {
       fetchData();
    }, []);
+
+   const handleSearch = (event) => {
+      const query = event.target.value.toLowerCase();
+      console.log(query);
+      if (query === "") {
+         fetchData();
+      } else {
+         const filtered = courses.filter((c) => {
+            return c.course.title.toLowerCase().includes(query);
+         });
+         setCourses(filtered);
+      }
+   };
 
    return (
       <>
@@ -112,131 +126,142 @@ const Dashboard = () => {
                         </div>
                      </div>
 
-                     <div className="card mb-4">
-                        <div className="card-header">
-                           <h3 className="mb-0">Courses</h3>
-                           <span>
-                              Start watching courses now from your dashboard
-                              page.
-                           </span>
-                        </div>
-                        <div className="card-body">
-                           <form className="row gx-3">
-                              <div className="col-lg-12 col-md-12 col-12 mb-lg-0 mb-2">
-                                 <input
-                                    type="search"
-                                    className="form-control"
-                                    placeholder="Search Your Courses"
-                                 />
-                              </div>
-                           </form>
-                        </div>
-                        <div className="table-responsive overflow-y-hidden">
-                           <table className="table mb-0 text-nowrap table-hover table-centered text-nowrap">
-                              <thead className="table-light">
-                                 <tr>
-                                    <th>Courses</th>
-                                    <th>Date Enrolled</th>
-                                    <th>Lectures</th>
-                                    <th>Completed</th>
-                                    <th>Action</th>
-                                    <th />
-                                 </tr>
-                              </thead>
-                              <tbody>
-                                 {courses?.map((c, index) => (
+                     {fetching === true && (
+                        <p className="mt-3 p-3">Loading...</p>
+                     )}
+
+                     {fetching === false && (
+                        <div className="card mb-4">
+                           <div className="card-header">
+                              <h3 className="mb-0">Courses</h3>
+                              <span>
+                                 Start watching courses now from your dashboard
+                                 page.
+                              </span>
+                           </div>
+                           <div className="card-body">
+                              <form className="row gx-3">
+                                 <div className="col-lg-12 col-md-12 col-12 mb-lg-0 mb-2">
+                                    <input
+                                       type="search"
+                                       className="form-control"
+                                       placeholder="Search Your Courses"
+                                       onChange={handleSearch}
+                                    />
+                                 </div>
+                              </form>
+                           </div>
+                           <div className="table-responsive overflow-y-hidden">
+                              <table className="table mb-0 text-nowrap table-hover table-centered text-nowrap">
+                                 <thead className="table-light">
                                     <tr>
-                                       <td>
-                                          <div className="d-flex align-items-center">
-                                             <div>
-                                                <a href="#">
-                                                   <img
-                                                      src={c.course.image}
-                                                      alt="course"
-                                                      className="rounded img-4by3-lg"
-                                                      style={{
-                                                         width: "100px",
-                                                         height: "70px",
-                                                         borderRadius: "50%",
-                                                         objectFit: "cover",
-                                                      }}
-                                                   />
-                                                </a>
-                                             </div>
-                                             <div className="ms-3">
-                                                <h4 className="mb-1 h5">
-                                                   <a
-                                                      href="#"
-                                                      className="text-inherit text-decoration-none text-dark"
-                                                   >
-                                                      {c.course.title}
-                                                   </a>
-                                                </h4>
-                                                <ul className="list-inline fs-6 mb-0">
-                                                   <li className="list-inline-item">
-                                                      <i className="fas fa-user"></i>
-                                                      <span className="ms-1">
-                                                         {c.course.language}
-                                                      </span>
-                                                   </li>
-                                                   <li className="list-inline-item">
-                                                      <i className="bi bi-reception-4"></i>
-                                                      <span className="ms-1">
-                                                         {c.course.level}
-                                                      </span>
-                                                   </li>
-                                                </ul>
-                                             </div>
-                                          </div>
-                                       </td>
-                                       <td>
-                                          <p className="mt-3">
-                                             {moment(c.course.date).format(
-                                                "D MMM, YYYY"
-                                             )}
-                                          </p>
-                                       </td>
-                                       <td>
-                                          <p className="mt-3">
-                                             {c.lectures.length}
-                                          </p>
-                                       </td>
-                                       <td>
-                                          <p className="mt-3">
-                                             {c.completed_lesson?.length}
-                                          </p>
-                                       </td>
-                                       <td>
-                                          {c.completed_lesson?.length < 1 && (
-                                             <Link
-                                                to={`/student/courses/${c.enrollment_id}/`}
-                                                className="btn btn-success btn-sm mt-3"
-                                             >
-                                                start Course
-                                                <i className="fas fa-arrow-right ms-2"></i>
-                                             </Link>
-                                          )}
-
-                                          {c.completed_lesson?.length > 0 && (
-                                             <Link
-                                                to={`/student/courses/${c.enrollment_id}/`}
-                                                className="btn btn-primary btn-sm mt-3"
-                                             >
-                                                Continue Course
-                                                <i className="fas fa-arrow-right ms-2"></i>
-                                             </Link>
-                                          )}
-                                       </td>
+                                       <th>Courses</th>
+                                       <th>Date Enrolled</th>
+                                       <th>Lectures</th>
+                                       <th>Completed</th>
+                                       <th>Action</th>
+                                       <th />
                                     </tr>
-                                 ))}
+                                 </thead>
+                                 <tbody>
+                                    {courses?.map((c, index) => (
+                                       <tr>
+                                          <td>
+                                             <div className="d-flex align-items-center">
+                                                <div>
+                                                   <a href="#">
+                                                      <img
+                                                         src={c.course.image}
+                                                         alt="course"
+                                                         className="rounded img-4by3-lg"
+                                                         style={{
+                                                            width: "100px",
+                                                            height: "70px",
+                                                            borderRadius: "50%",
+                                                            objectFit: "cover",
+                                                         }}
+                                                      />
+                                                   </a>
+                                                </div>
+                                                <div className="ms-3">
+                                                   <h4 className="mb-1 h5">
+                                                      <a
+                                                         href="#"
+                                                         className="text-inherit text-decoration-none text-dark"
+                                                      >
+                                                         {c.course.title}
+                                                      </a>
+                                                   </h4>
+                                                   <ul className="list-inline fs-6 mb-0">
+                                                      <li className="list-inline-item">
+                                                         <i className="fas fa-user"></i>
+                                                         <span className="ms-1">
+                                                            {c.course.language}
+                                                         </span>
+                                                      </li>
+                                                      <li className="list-inline-item">
+                                                         <i className="bi bi-reception-4"></i>
+                                                         <span className="ms-1">
+                                                            {c.course.level}
+                                                         </span>
+                                                      </li>
+                                                   </ul>
+                                                </div>
+                                             </div>
+                                          </td>
+                                          <td>
+                                             <p className="mt-3">
+                                                {moment(c.course.date).format(
+                                                   "D MMM, YYYY"
+                                                )}
+                                             </p>
+                                          </td>
+                                          <td>
+                                             <p className="mt-3">
+                                                {c.lectures.length}
+                                             </p>
+                                          </td>
+                                          <td>
+                                             <p className="mt-3">
+                                                {c.completed_lesson?.length}
+                                             </p>
+                                          </td>
+                                          <td>
+                                             {c.completed_lesson?.length <
+                                                1 && (
+                                                <Link
+                                                   to={`/student/courses/${c.enrollment_id}/`}
+                                                   className="btn btn-success btn-sm mt-3"
+                                                >
+                                                   start Course
+                                                   <i className="fas fa-arrow-right ms-2"></i>
+                                                </Link>
+                                             )}
 
-                                 {courses?.length < 1 && (
-                                    <p className="mt-4 p-4">No courses found</p>
-                                 )}
-                              </tbody>
-                           </table>
+                                             {c.completed_lesson?.length >
+                                                0 && (
+                                                <Link
+                                                   to={`/student/courses/${c.enrollment_id}/`}
+                                                   className="btn btn-primary btn-sm mt-3"
+                                                >
+                                                   Continue Course
+                                                   <i className="fas fa-arrow-right ms-2"></i>
+                                                </Link>
+                                             )}
+                                          </td>
+                                       </tr>
+                                    ))}
+
+                                    {courses?.length < 1 && (
+                                       <p className="mt-4 p-4">
+                                          No courses found
+                                       </p>
+                                    )}
+                                 </tbody>
+                              </table>
+                           </div>
                         </div>
-                     </div>
+                     )}
                   </div>
                </div>
             </div>
