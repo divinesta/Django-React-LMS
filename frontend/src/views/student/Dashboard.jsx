@@ -19,7 +19,7 @@ const Dashboard = () => {
       useAxios()
          .get(`student/summary/${userId}/`)
          .then((res) => {
-            console.log(res.data[0]);
+            // console.log(res.data[0]);
             setStats(res.data[0]);
             setFetching(false)
          });
@@ -27,7 +27,7 @@ const Dashboard = () => {
       useAxios()
          .get(`student/course-list/${userId}/`)
          .then((res) => {
-            console.log(res.data);
+            // console.log(res.data);
             setCourses(res.data);
             setFetching(false);
          });
@@ -165,7 +165,7 @@ const Dashboard = () => {
                                  </thead>
                                  <tbody>
                                     {courses?.map((c, index) => (
-                                       <tr>
+                                       <tr key={index}>
                                           <td>
                                              <div className="d-flex align-items-center">
                                                 <div>
