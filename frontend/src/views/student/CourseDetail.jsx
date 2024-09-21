@@ -13,10 +13,21 @@ import { userId } from "../../utils/constants";
 
 function CourseDetail() {
    const [show, setShow] = useState(false);
+   const [course, setCourse] = useState([]);
+   const [variantItem, setVariantItem] = useState(null);
+   const param = useParams();
+   // console.log(param);
+
+
+   //Play lecture modal
    const handleClose = () => setShow(false);
-   const handleShow = () => {
+   const handleShow = (variant_item) => {
       setShow(true);
+      setVariantItem(variant_item)
    };
+
+   console.log(variantItem);
+   
 
    const [noteShow, setNoteShow] = useState(false);
    const handleNoteClose = () => setNoteShow(false);
@@ -29,10 +40,6 @@ function CourseDetail() {
    const handleConversationShow = () => {
       setConversationShow(true);
    };
-
-   const [course, setCourse] = useState([]);
-   const param = useParams();
-   // console.log(param);
 
    const fetchCourseDetail = async () => {
       useAxios()
@@ -188,7 +195,10 @@ function CourseDetail() {
 
                                                 {course?.curriculum?.map(
                                                    (c, index) => (
-                                                      <div key={index} className="accordion-item mb-3 bg-light">
+                                                      <div
+                                                         key={index}
+                                                         className="accordion-item mb-3 bg-light"
+                                                      >
                                                          <h6
                                                             className="accordion-header font-base"
                                                             id="heading-1"
@@ -203,8 +213,18 @@ function CourseDetail() {
                                                             >
                                                                {c.title}
                                                                <span className="small ms-0 ms-sm-2">
-                                                                  ({c.variant_items?.length}{" "}Lecture
-                                                                  {c.variant_items?.length > 1 && "s"})
+                                                                  (
+                                                                  {
+                                                                     c
+                                                                        .variant_items
+                                                                        ?.length
+                                                                  }{" "}
+                                                                  Lecture
+                                                                  {c
+                                                                     .variant_items
+                                                                     ?.length >
+                                                                     1 && "s"}
+                                                                  )
                                                                </span>
                                                             </button>
                                                          </h6>
@@ -217,34 +237,38 @@ function CourseDetail() {
                                                             <div className="accordion-body mt-3">
                                                                {/* Course lecture */}
                                                                {c.variant_items?.map((l, index) => (
-                                                               <div key={index}>
-                                                               <div className="d-flex justify-content-between align-items-center">
-                                                                  <div className="position-relative d-flex align-items-center">
-                                                                     <a
-                                                                        href="#"
-                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
-                                                                     >
-                                                                        <i className="fas fa-play me-0" />
-                                                                     </a>
-                                                                     <span className="d-inline-block text-truncate ms-2 mb-0 h6 fw-light w-100px w-sm-200px w-md-400px">
-                                                                        {l.title}
-                                                                     </span>
-                                                                  </div>
-                                                                  <div className="d-flex">
-                                                                     <p className="mb-0">
-                                                                        {l.content_duration || "0m 0s"}
-                                                                     </p>
-                                                                     <input
-                                                                        type="checkbox"
-                                                                        className="form-check-input ms-2"
-                                                                        name=""
-                                                                        id=""
-                                                                     />
-                                                                  </div>
-                                                               </div>
-                                                               <hr />
-                                                               </div>
-                                                               ))}
+                                                                  <div key={index}>
+                                                                        <div className="d-flex justify-content-between align-items-center">
+                                                                           <div className="position-relative d-flex align-items-center">
+                                                                              <button
+                                                                                 onClick={() => handleShow(l)}
+                                                                                 className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                              >
+                                                                                 <i className="fas fa-play me-0" />
+                                                                              </button>
+                                                                              <span className="d-inline-block text-truncate ms-2 mb-0 h6 fw-light w-100px w-sm-200px w-md-400px">
+                                                                                 {
+                                                                                    l.title
+                                                                                 }
+                                                                              </span>
+                                                                           </div>
+                                                                           <div className="d-flex">
+                                                                              <p className="mb-0">
+                                                                                 {l.content_duration ||
+                                                                                    "0m 0s"}
+                                                                              </p>
+                                                                              <input
+                                                                                 type="checkbox"
+                                                                                 className="form-check-input ms-2"
+                                                                                 name=""
+                                                                                 id=""
+                                                                              />
+                                                                           </div>
+                                                                        </div>
+                                                                        <hr />
+                                                                     </div>
+                                                                  )
+                                                               )}
                                                             </div>
                                                          </div>
                                                       </div>
@@ -603,13 +627,13 @@ function CourseDetail() {
          </section>
 
          {/* Lecture Modal */}
-         <Modal show={null} size="lg" onHide={null}>
+         <Modal show={show} size="lg" onHide={handleClose}>
             <Modal.Header closeButton>
-               <Modal.Title>Lesson: Lesson Title</Modal.Title>
+               <Modal.Title>Lesson: {variantItem?.title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                <ReactPlayer
-                  url={`url-here`}
+                  url={variantItem?.file}
                   controls
                   playing
                   width={"100%"}
@@ -617,7 +641,7 @@ function CourseDetail() {
                />
             </Modal.Body>
             <Modal.Footer>
-               <Button variant="secondary" onClick={null}>
+               <Button variant="secondary" onClick={handleClose}>
                   Close
                </Button>
             </Modal.Footer>
