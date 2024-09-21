@@ -20,8 +20,9 @@ import Search from "./views/base/Search";
 
 // Student Routes
 import StudentDashboard from "./views/student/Dashboard"
-import StudentChangePassword from "./views/student/ChangePassword";
 import StudentCourses from "./views/student/Courses";
+import StudentCourseDetail from "./views/student/CourseDetail";
+import StudentChangePassword from "./views/student/ChangePassword";
 
 const App = () => {
    const cart_id = CartId();
@@ -67,6 +68,7 @@ const App = () => {
                   <Route path="/student/dashboard/" element={<StudentDashboard />}/>
                   <Route path="/student/change-password/" element={<StudentChangePassword />} />
                   <Route path="/student/courses/" element={<StudentCourses />} />
+                  <Route path="/student/courses/:enrollment_id/" element={<StudentCourseDetail />} />
                </Routes>
             </MainWrapper>
          </BrowserRouter>
