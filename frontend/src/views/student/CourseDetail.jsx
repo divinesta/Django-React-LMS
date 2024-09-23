@@ -20,6 +20,7 @@ const CourseDetail = () => {
    const [markAsCompletedStatus, setMarkAsCompletedStatus] = useState({});
    const [createNote, setCreateNote] = useState({ title: "", note: "" });
    const [selectedNote, setSelectedNote] = useState(null);  
+   const [createMessage, setCreateMessage] = useState({ title: "", message: "" });
    const param = useParams();
    // console.log(param);
 
@@ -45,6 +46,11 @@ const CourseDetail = () => {
       setConversationShow(true);
    };
    
+   const [addQuestionShow, setAddQuestionShow] = useState(false);
+   const handleAddQuestionClose = () => setAddQuestionShow(false);
+   const handleAddQuestionShow = () => {
+      setAddQuestionShow(true);
+   };
 
    const fetchCourseDetail = async () => {
       useAxios()
@@ -57,7 +63,7 @@ const CourseDetail = () => {
             setCompletionPercentage(percentageCompleted?.toFixed(2))
          });
    };
-   console.log(course);
+   // console.log(course);
    
 
    useEffect(() => {
@@ -93,7 +99,7 @@ const CourseDetail = () => {
       });
    };
 
-   console.log(createNote);
+   // console.log(createNote);
    
    const handleSubmitCreateNote = async (e) => {
       e.preventDefault();
@@ -152,6 +158,39 @@ const CourseDetail = () => {
                   title: "Note deleted",
                });
             });
+      } catch (error) {
+         console.log(error);
+      }
+   }
+
+   const handleMessageChange = (event) => {
+      setCreateMessage({
+         ...createMessage,
+         [event.target.name]: event.target.value,
+      });
+   };
+
+   // console.log(createMessage);
+   
+   const handleSaveQuestion = async (e) => {
+      e.preventDefault()
+
+      const formdata = new FormData();
+      formdata.append("user_id", userId);
+      formdata.append("course_id", course.course?.id);
+      formdata.append("title", createMessage.title);
+      formdata.append("message", createMessage.message);
+
+      try {
+         await useAxios().post(`student/question-answer-list-create/${course.course?.id}/`, formdata).then((res) => {
+            fetchCourseDetail();
+            handleAddQuestionClose()
+            Toast.fire({
+               icon: "success",
+               title: "Question sent",
+            });
+            console.log(res.data);
+         })
       } catch (error) {
          console.log(error);
       }
@@ -509,7 +548,9 @@ const CourseDetail = () => {
                                                                      <button
                                                                         type="submit"
                                                                         className="btn btn-primary"
-                                                                        onClick={handleNoteClose}
+                                                                        onClick={
+                                                                           handleNoteClose
+                                                                        }
                                                                      >
                                                                         Save
                                                                         Note{" "}
@@ -551,7 +592,11 @@ const CourseDetail = () => {
                                                                         Edit
                                                                      </a>
                                                                      <a
-                                                                        onClick={() => handleNoteDelete(n.id)}
+                                                                        onClick={() =>
+                                                                           handleNoteDelete(
+                                                                              n.id
+                                                                           )
+                                                                        }
                                                                         className="btn btn-danger mb-0"
                                                                      >
                                                                         <i className="bi bi-trash me-2" />{" "}
@@ -565,8 +610,12 @@ const CourseDetail = () => {
                                                       )
                                                    )}
 
-                                                   {course?.note?.length < 1 && (
-                                                      <p className="m-3 p-3">No notes</p>)}
+                                                   {course?.note?.length <
+                                                      1 && (
+                                                      <p className="m-3 p-3">
+                                                         No notes
+                                                      </p>
+                                                   )}
                                                 </div>
                                              </div>
                                           </div>
@@ -603,7 +652,9 @@ const CourseDetail = () => {
                                                       </div>
                                                       <div className="col-sm-6 col-lg-3">
                                                          <a
-                                                            href="#"
+                                                            onClick={
+                                                               handleAddQuestionShow
+                                                            }
                                                             className="btn btn-primary mb-0 w-100"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#modalCreatePost"
@@ -782,7 +833,9 @@ const CourseDetail = () => {
                <Modal.Title>Note: {selectedNote?.title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-               <form onSubmit={(e) => handleSubmitNoteEdit(e, selectedNote?.id)}>
+               <form
+                  onSubmit={(e) => handleSubmitNoteEdit(e, selectedNote?.id)}
+               >
                   <div className="mb-3">
                      <label htmlFor="exampleInputEmail1" className="form-label">
                         Note Title
@@ -825,7 +878,7 @@ const CourseDetail = () => {
             </Modal.Body>
          </Modal>
 
-         {/* Note Edit Modal */}
+         {/* Conversation Modal */}
          <Modal
             show={ConversationShow}
             size="lg"
@@ -1078,6 +1131,61 @@ const CourseDetail = () => {
                      </button>
                   </form>
                </div>
+            </Modal.Body>
+         </Modal>
+
+         {/* Ask Question Modal */}
+         <Modal
+            show={addQuestionShow}
+            size="lg"
+            onHide={handleAddQuestionClose}
+         >
+            <Modal.Header closeButton>
+               <Modal.Title>Ask Question</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+               <form
+                  onSubmit={handleSaveQuestion}
+               >
+                  <div className="mb-3">
+                     <label htmlFor="exampleInputEmail1" className="form-label">
+                        Question Title
+                     </label>
+                     <input
+                        value={createMessage.title}
+                        name="title"
+                        onChange={handleMessageChange}
+                        type="text"
+                        className="form-control"
+                     />
+                  </div>
+                  <div className="mb-3">
+                     <label
+                        htmlFor="exampleInputPassword1"
+                        className="form-label"
+                     >
+                        Question Message
+                     </label>
+                     <textarea
+                        onChange={handleMessageChange}
+                        value={createMessage.message}
+                        name="message"
+                        className="form-control"
+                        cols="30"
+                        rows="10"
+                     ></textarea>
+                  </div>
+                  <button
+                     type="button"
+                     className="btn btn-secondary me-2"
+                     onClick={handleAddQuestionClose}
+                  >
+                     <i className="fas fa-arrow-left"></i> Close
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                     Send Message <i className="fas fa-check-circle"></i>
+                  </button>
+               </form>
             </Modal.Body>
          </Modal>
 
