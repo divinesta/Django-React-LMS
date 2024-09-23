@@ -143,6 +143,20 @@ const CourseDetail = () => {
       }
    }
 
+   const handleNoteDelete = async (noteId) => {
+      try {
+         useAxios().delete(`student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`).then((res) => {
+               fetchCourseDetail();
+               Toast.fire({
+                  icon: "success",
+                  title: "Note deleted",
+               });
+            });
+      } catch (error) {
+         console.log(error);
+      }
+   }
+
    return (
       <>
          <BaseHeader />
@@ -537,7 +551,7 @@ const CourseDetail = () => {
                                                                         Edit
                                                                      </a>
                                                                      <a
-                                                                        href="#"
+                                                                        onClick={() => handleNoteDelete(n.id)}
                                                                         className="btn btn-danger mb-0"
                                                                      >
                                                                         <i className="bi bi-trash me-2" />{" "}
@@ -550,6 +564,9 @@ const CourseDetail = () => {
                                                          </div>
                                                       )
                                                    )}
+
+                                                   {course?.note?.length < 1 && (
+                                                      <p className="m-3 p-3">No notes</p>)}
                                                 </div>
                                              </div>
                                           </div>
