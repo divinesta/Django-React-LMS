@@ -11,6 +11,7 @@ import Modal from "react-bootstrap/Modal";
 import useAxios from "../../utils/useAxios";
 import { userId } from "../../utils/constants";
 import Toast from "../plugin/Toast";
+import moment from "moment";
 
 const CourseDetail = () => {
    const [show, setShow] = useState(false);
@@ -21,6 +22,8 @@ const CourseDetail = () => {
    const [createNote, setCreateNote] = useState({ title: "", note: "" });
    const [selectedNote, setSelectedNote] = useState(null);  
    const [createMessage, setCreateMessage] = useState({ title: "", message: "" });
+   const [question, setQuestion] = useState([]);
+   const [selectedConversation, setSelectedConversation] = useState(null);
    const param = useParams();
    // console.log(param);
 
@@ -42,8 +45,9 @@ const CourseDetail = () => {
 
    const [ConversationShow, setConversationShow] = useState(false);
    const handleConversationClose = () => setConversationShow(false);
-   const handleConversationShow = () => {
+   const handleConversationShow = (conversation) => {
       setConversationShow(true);
+      setSelectedConversation(conversation);
    };
    
    const [addQuestionShow, setAddQuestionShow] = useState(false);
@@ -57,6 +61,7 @@ const CourseDetail = () => {
          .get(`student/course-detail/${userId}/${param.enrollment_id}/`)
          .then((res) => {
             setCourse(res.data);
+            setQuestion(res.data.question_answer)
             // console.log(res.data);
             const percentageCompleted = res.data.completed_lesson?.length / res.data.lectures?.length * 100;
             // console.log(percentageCompleted);
@@ -64,6 +69,7 @@ const CourseDetail = () => {
          });
    };
    // console.log(course);
+   console.log(question);
    
 
    useEffect(() => {
@@ -668,56 +674,75 @@ const CourseDetail = () => {
                                                 <div className="card-body p-0 pt-3">
                                                    <div className="vstack gap-3 p-3">
                                                       {/* Question item START */}
-                                                      <div className="shadow rounded-3 p-3">
-                                                         <div className="d-sm-flex justify-content-sm-between mb-3">
-                                                            <div className="d-flex align-items-center">
-                                                               <div className="avatar avatar-sm flex-shrink-0">
-                                                                  <img
-                                                                     src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                                                                     className="avatar-img rounded-circle"
-                                                                     alt="avatar"
-                                                                     style={{
-                                                                        width: "60px",
-                                                                        height:
-                                                                           "60px",
-                                                                        borderRadius:
-                                                                           "50%",
-                                                                        objectFit:
-                                                                           "cover",
-                                                                     }}
-                                                                  />
+                                                      {question?.map(
+                                                         (q, index) => (
+                                                            <div
+                                                               className="shadow rounded-3 p-3"
+                                                               key={index}
+                                                            >
+                                                               <div className="d-sm-flex justify-content-sm-between mb-3">
+                                                                  <div className="d-flex align-items-center">
+                                                                     <div className="avatar avatar-sm flex-shrink-0">
+                                                                        <img
+                                                                           src={
+                                                                              q
+                                                                                 .profile
+                                                                                 .image
+                                                                           }
+                                                                           className="avatar-img rounded-circle"
+                                                                           alt="avatar"
+                                                                           style={{
+                                                                              width: "60px",
+                                                                              height:
+                                                                                 "60px",
+                                                                              borderRadius:
+                                                                                 "50%",
+                                                                              objectFit:
+                                                                                 "cover",
+                                                                           }}
+                                                                        />
+                                                                     </div>
+                                                                     <div className="ms-2">
+                                                                        <h6 className="mb-0">
+                                                                           <a
+                                                                              href="#"
+                                                                              className="text-decoration-none text-dark"
+                                                                           >
+                                                                              {
+                                                                                 q
+                                                                                    .profile
+                                                                                    .full_name
+                                                                              }
+                                                                           </a>
+                                                                        </h6>
+                                                                        <small>
+                                                                           {moment(
+                                                                              q.date
+                                                                           ).format(
+                                                                              "DD MMM, YYYY"
+                                                                           )}
+                                                                        </small>
+                                                                     </div>
+                                                                  </div>
                                                                </div>
-                                                               <div className="ms-2">
-                                                                  <h6 className="mb-0">
-                                                                     <a
-                                                                        href="#"
-                                                                        className="text-decoration-none text-dark"
-                                                                     >
-                                                                        Angelina
-                                                                        Poi
-                                                                     </a>
-                                                                  </h6>
-                                                                  <small>
-                                                                     Asked 10
-                                                                     Hours ago
-                                                                  </small>
-                                                               </div>
+                                                               <h5>
+                                                                  {q.title}
+                                                               </h5>
+                                                               <button
+                                                                  className="btn btn-primary btn-sm mb-3 mt-3"
+                                                                  onClick={() =>
+                                                                     handleConversationShow(
+                                                                        q
+                                                                     )
+                                                                  }
+                                                               >
+                                                                  Join
+                                                                  Conversation{" "}
+                                                                  <i className="fas fa-arrow-right"></i>
+                                                               </button>
                                                             </div>
-                                                         </div>
-                                                         <h5>
-                                                            How can i fix this
-                                                            bug?
-                                                         </h5>
-                                                         <button
-                                                            className="btn btn-primary btn-sm mb-3 mt-3"
-                                                            onClick={
-                                                               handleConversationShow
-                                                            }
-                                                         >
-                                                            Join Conversation{" "}
-                                                            <i className="fas fa-arrow-right"></i>
-                                                         </button>
-                                                      </div>
+                                                         )
+                                                      )}
                                                    </div>
                                                 </div>
                                              </div>
@@ -885,7 +910,7 @@ const CourseDetail = () => {
             onHide={handleConversationClose}
          >
             <Modal.Header closeButton>
-               <Modal.Title>Lesson: 123</Modal.Title>
+               <Modal.Title>Lesson: {selectedConversation?.title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                <div className="border p-2 p-sm-4 rounded-3">
@@ -893,207 +918,57 @@ const CourseDetail = () => {
                      className="list-unstyled mb-0"
                      style={{ overflowY: "scroll", height: "500px" }}
                   >
-                     <li className="comment-item mb-3">
-                        <div className="d-flex">
-                           <div className="avatar avatar-sm flex-shrink-0">
-                              <a href="#">
-                                 <img
-                                    className="avatar-img rounded-circle"
-                                    src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                                    style={{
-                                       width: "40px",
-                                       height: "40px",
-                                       borderRadius: "50%",
-                                       objectFit: "cover",
-                                    }}
-                                    alt="womans image"
-                                 />
-                              </a>
-                           </div>
-                           <div className="ms-2">
-                              {/* Comment by */}
-                              <div className="bg-light p-3 rounded w-100">
-                                 <div className="d-flex w-100 justify-content-center">
-                                    <div className="me-2 ">
-                                       <h6 className="mb-1 lead fw-bold">
-                                          <a
-                                             href="#!"
-                                             className="text-decoration-none text-dark"
-                                          >
-                                             {" "}
-                                             Louis Ferguson{" "}
-                                          </a>
-                                          <br />
-                                          <span
-                                             style={{
-                                                fontSize: "12px",
-                                                color: "gray",
-                                             }}
-                                          >
-                                             5hrs Ago
-                                          </span>
-                                       </h6>
-                                       <p className="mb-0 mt-3  ">
-                                          Removed demands expense account
-                                       </p>
+                     {selectedConversation?.messages?.map((m, index) => (
+                        <li key={index} className="comment-item mb-3">
+                           <div className="d-flex">
+                              <div className="avatar avatar-sm flex-shrink-0">
+                                 <a href="#">
+                                    <img
+                                       className="avatar-img rounded-circle"
+                                       src={m.profile?.image}
+                                       style={{
+                                          width: "40px",
+                                          height: "40px",
+                                          borderRadius: "50%",
+                                          objectFit: "cover",
+                                       }}
+                                       alt="womans image"
+                                    />
+                                 </a>
+                              </div>
+                              <div className="ms-2">
+                                 {/* Comment by */}
+                                 <div className="bg-light p-3 rounded w-100">
+                                    <div className="d-flex w-100 justify-content-center">
+                                       <div className="me-2 ">
+                                          <h6 className="mb-1 lead fw-bold">
+                                             <a
+                                                href="#!"
+                                                className="text-decoration-none text-dark"
+                                             >
+                                                {" "}
+                                                {m.profile?.full_name}{" "}
+                                             </a>
+                                             <br />
+                                             <span
+                                                style={{
+                                                   fontSize: "12px",
+                                                   color: "gray",
+                                                }}
+                                             >
+                                                {moment(m.date).format('DD MMM, YYYY')}
+                                             </span>
+                                          </h6>
+                                          <p className="mb-0 mt-3  ">
+                                             {m.message}
+                                          </p>
+                                       </div>
                                     </div>
                                  </div>
                               </div>
                            </div>
-                        </div>
-                     </li>
-
-                     <li className="comment-item mb-3">
-                        <div className="d-flex">
-                           <div className="avatar avatar-sm flex-shrink-0">
-                              <a href="#">
-                                 <img
-                                    className="avatar-img rounded-circle"
-                                    src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                                    style={{
-                                       width: "40px",
-                                       height: "40px",
-                                       borderRadius: "50%",
-                                       objectFit: "cover",
-                                    }}
-                                    alt="womans image"
-                                 />
-                              </a>
-                           </div>
-                           <div className="ms-2">
-                              {/* Comment by */}
-                              <div className="bg-light p-3 rounded w-100">
-                                 <div className="d-flex w-100 justify-content-center">
-                                    <div className="me-2 ">
-                                       <h6 className="mb-1 lead fw-bold">
-                                          <a
-                                             href="#!"
-                                             className="text-decoration-none text-dark"
-                                          >
-                                             {" "}
-                                             Louis Ferguson{" "}
-                                          </a>
-                                          <br />
-                                          <span
-                                             style={{
-                                                fontSize: "12px",
-                                                color: "gray",
-                                             }}
-                                          >
-                                             5hrs Ago
-                                          </span>
-                                       </h6>
-                                       <p className="mb-0 mt-3  ">
-                                          Removed demands expense account from
-                                          the debby building in a hall town tak
-                                          with
-                                       </p>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </li>
-
-                     <li className="comment-item mb-3">
-                        <div className="d-flex">
-                           <div className="avatar avatar-sm flex-shrink-0">
-                              <a href="#">
-                                 <img
-                                    className="avatar-img rounded-circle"
-                                    src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                                    style={{
-                                       width: "40px",
-                                       height: "40px",
-                                       borderRadius: "50%",
-                                       objectFit: "cover",
-                                    }}
-                                    alt="womans image"
-                                 />
-                              </a>
-                           </div>
-                           <div className="ms-2">
-                              {/* Comment by */}
-                              <div className="bg-light p-3 rounded w-100">
-                                 <div className="d-flex w-100 justify-content-center">
-                                    <div className="me-2 ">
-                                       <h6 className="mb-1 lead fw-bold">
-                                          <a
-                                             href="#!"
-                                             className="text-decoration-none text-dark"
-                                          >
-                                             {" "}
-                                             Louis Ferguson{" "}
-                                          </a>
-                                          <br />
-                                          <span
-                                             style={{
-                                                fontSize: "12px",
-                                                color: "gray",
-                                             }}
-                                          >
-                                             5hrs Ago
-                                          </span>
-                                       </h6>
-                                       <p className="mb-0 mt-3  ">
-                                          Removed demands expense account
-                                       </p>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </li>
-
-                     <li className="comment-item mb-3">
-                        <div className="d-flex">
-                           <div className="avatar avatar-sm flex-shrink-0">
-                              <a href="#">
-                                 <img
-                                    className="avatar-img rounded-circle"
-                                    src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                                    style={{
-                                       width: "40px",
-                                       height: "40px",
-                                       borderRadius: "50%",
-                                       objectFit: "cover",
-                                    }}
-                                    alt="womans image"
-                                 />
-                              </a>
-                           </div>
-                           <div className="ms-2">
-                              {/* Comment by */}
-                              <div className="bg-light p-3 rounded w-100">
-                                 <div className="d-flex w-100 justify-content-center">
-                                    <div className="me-2 ">
-                                       <h6 className="mb-1 lead fw-bold">
-                                          <a
-                                             href="#!"
-                                             className="text-decoration-none text-dark"
-                                          >
-                                             {" "}
-                                             Louis Ferguson{" "}
-                                          </a>
-                                          <br />
-                                          <span
-                                             style={{
-                                                fontSize: "12px",
-                                                color: "gray",
-                                             }}
-                                          >
-                                             5hrs Ago
-                                          </span>
-                                       </h6>
-                                       <p className="mb-0 mt-3  ">
-                                          Removed demands expense account
-                                       </p>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </li>
+                        </li>
+                     ))}
                   </ul>
 
                   <form class="w-100 d-flex">
@@ -1112,7 +987,7 @@ const CourseDetail = () => {
                      </button>
                   </form>
 
-                  <form class="w-100">
+                  {/* <form class="w-100">
                      <input
                         name="title"
                         type="text"
@@ -1129,7 +1004,7 @@ const CourseDetail = () => {
                      <button class="btn btn-primary mb-0 w-25" type="button">
                         Post <i className="fas fa-paper-plane"></i>
                      </button>
-                  </form>
+                  </form> */}
                </div>
             </Modal.Body>
          </Modal>
@@ -1144,9 +1019,7 @@ const CourseDetail = () => {
                <Modal.Title>Ask Question</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-               <form
-                  onSubmit={handleSaveQuestion}
-               >
+               <form onSubmit={handleSaveQuestion}>
                   <div className="mb-3">
                      <label htmlFor="exampleInputEmail1" className="form-label">
                         Question Title

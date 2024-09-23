@@ -106,6 +106,7 @@ class VariantSerializer(serializers.ModelSerializer):
 
 
 class Question_Answer_MessageSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(many=False)
     class Meta:
         model = api_models.Question_Answer_Message
         fields = '__all__'
