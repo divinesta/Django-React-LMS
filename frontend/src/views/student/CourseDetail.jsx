@@ -10,13 +10,15 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import useAxios from "../../utils/useAxios";
 import { userId } from "../../utils/constants";
+import Toast from "../plugin/Toast";
 
-function CourseDetail() {
+const CourseDetail = () => {
    const [show, setShow] = useState(false);
    const [course, setCourse] = useState([]);
    const [variantItem, setVariantItem] = useState(null);
    const [completionPercentage, setCompletionPercentage] = useState(0);
    const [markAsCompletedStatus, setMarkAsCompletedStatus] = useState({});
+   const [createNote, setCreateNote] = useState({ title: "", note: "" });
    const param = useParams();
    // console.log(param);
 
@@ -29,8 +31,6 @@ function CourseDetail() {
    };
 
    // console.log(variantItem);
-   
-
    const [noteShow, setNoteShow] = useState(false);
    const handleNoteClose = () => setNoteShow(false);
    const handleNoteShow = () => {
@@ -42,6 +42,7 @@ function CourseDetail() {
    const handleConversationShow = () => {
       setConversationShow(true);
    };
+   
 
    const fetchCourseDetail = async () => {
       useAxios()
@@ -62,8 +63,8 @@ function CourseDetail() {
    }, []);
 
    const handleMarkLessonAsCompleted = (variantItemId) => {
-    const key = `lecture_${variantItemId}`;
-    setMarkAsCompletedStatus({
+   const key = `lecture_${variantItemId}`;
+   setMarkAsCompletedStatus({
       ...markAsCompletedStatus,
       [key]: "Updating",
    });
@@ -74,8 +75,7 @@ function CourseDetail() {
    formdata.append("variant_item_id", variantItemId);
 
    useAxios()
-      .post(`student/course-completed/`, formdata)
-      .then((res) => {
+      .post(`student/course-completed/`, formdata).then((res) => {
          fetchCourseDetail();
          setMarkAsCompletedStatus({
             ...markAsCompletedStatus,
@@ -83,6 +83,39 @@ function CourseDetail() {
          });
       });
    }
+
+   const handleNoteChange = (event) => {
+      setCreateNote({
+         ...createNote,
+         [event.target.name]: event.target.value,
+      });
+   };
+
+   console.log(createNote);
+   
+   const handleSubmitCreateNote = async (e) => {
+      e.preventDefault();
+      const formdata = new FormData();
+
+      formdata.append("user_id", userId);
+      formdata.append("enrollment_id", param.enrollment_id);
+      formdata.append("title", createNote.title);
+      formdata.append("note", createNote.note);
+
+      try {
+         await useAxios().post(`student/course-note/${userId}/${param.enrollment_id}/`, formdata).then((res) => {
+               fetchCourseDetail();
+               Toast.fire({
+                  icon: "success",
+                  title: "Note created",
+               });
+               handleNoteClose();
+            });
+      } catch (error) {
+         console.log(error);
+      }
+   };
+
 
    return (
       <>
@@ -305,9 +338,19 @@ function CourseDetail() {
                                                                                  type="checkbox"
                                                                                  className="form-check-input ms-2"
                                                                                  onChange={() =>
-                                                                                    handleMarkLessonAsCompleted
-                                                                                 (l.variant_item_id)}
-                                                                                 checked={course.completed_lesson?.some((cl) => cl.variant_item.id === l.id)}
+                                                                                    handleMarkLessonAsCompleted(
+                                                                                       l.variant_item_id
+                                                                                    )
+                                                                                 }
+                                                                                 checked={course.completed_lesson?.some(
+                                                                                    (
+                                                                                       cl
+                                                                                    ) =>
+                                                                                       cl
+                                                                                          .variant_item
+                                                                                          .id ===
+                                                                                       l.id
+                                                                                 )}
                                                                                  name=""
                                                                                  id=""
                                                                               />
@@ -374,7 +417,7 @@ function CourseDetail() {
                                                                   />
                                                                </div>
                                                                <div className="modal-body">
-                                                                  <form>
+                                                                  <form onSubmit={handleSubmitCreateNote}>
                                                                      <div className="mb-3">
                                                                         <label
                                                                            htmlFor="exampleInputEmail1"
@@ -386,6 +429,10 @@ function CourseDetail() {
                                                                         <input
                                                                            type="text"
                                                                            className="form-control"
+                                                                           name="title"
+                                                                           onChange={
+                                                                              handleNoteChange
+                                                                           }
                                                                         />
                                                                      </div>
                                                                      <div className="mb-3">
@@ -398,10 +445,13 @@ function CourseDetail() {
                                                                         </label>
                                                                         <textarea
                                                                            className="form-control"
-                                                                           name=""
                                                                            id=""
                                                                            cols="30"
                                                                            rows="10"
+                                                                           name="note"
+                                                                           onChange={
+                                                                              handleNoteChange
+                                                                           }
                                                                         ></textarea>
                                                                      </div>
                                                                      <button
