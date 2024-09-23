@@ -34,8 +34,9 @@ const CourseDetail = () => {
    // console.log(variantItem);
    const [noteShow, setNoteShow] = useState(false);
    const handleNoteClose = () => setNoteShow(false);
-   const handleNoteShow = () => {
+   const handleNoteShow = (note) => {
       setNoteShow(true);
+      setSelectedNote(note)
    };
 
    const [ConversationShow, setConversationShow] = useState(false);
@@ -117,6 +118,30 @@ const CourseDetail = () => {
       }
    };
 
+
+   const handleSubmitNoteEdit = async (e, noteId) => {
+      e.preventDefault();
+      const formdata = new FormData();
+
+      formdata.append("user_id", userId);
+      formdata.append("enrollment_id", param.enrollment_id);
+      formdata.append("title", createNote.title || selectedNote?.title);
+      formdata.append("note", createNote.note || selectedNote?.note);
+
+      try {
+         useAxios().patch(
+            `student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`, formdata).then((res) => {
+               fetchCourseDetail();
+               Toast.fire({
+                  icon: "success",
+                  title: "Note updated",
+               });
+               // handleNoteClose();
+            });
+      } catch (error) {
+         console.log(error);
+      }
+   }
 
    return (
       <>
@@ -470,6 +495,7 @@ const CourseDetail = () => {
                                                                      <button
                                                                         type="submit"
                                                                         className="btn btn-primary"
+                                                                        onClick={handleNoteClose}
                                                                      >
                                                                         Save
                                                                         Note{" "}
@@ -500,8 +526,10 @@ const CourseDetail = () => {
                                                                   {/* Buttons */}
                                                                   <div className="hstack gap-3 flex-wrap">
                                                                      <a
-                                                                        onClick={
-                                                                           handleNoteShow
+                                                                        onClick={() =>
+                                                                           handleNoteShow(
+                                                                              n
+                                                                           )
                                                                         }
                                                                         className="btn btn-success mb-0"
                                                                      >
@@ -734,17 +762,18 @@ const CourseDetail = () => {
          {/* Note Edit Modal */}
          <Modal show={noteShow} size="lg" onHide={handleNoteClose}>
             <Modal.Header closeButton>
-               <Modal.Title>Note: Note Title</Modal.Title>
+               <Modal.Title>Note: {selectedNote?.title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-               <form>
+               <form onSubmit={(e) => handleSubmitNoteEdit(e, selectedNote?.id)}>
                   <div className="mb-3">
                      <label htmlFor="exampleInputEmail1" className="form-label">
                         Note Title
                      </label>
                      <input
-                        defaultValue={null}
+                        defaultValue={selectedNote?.title}
                         name="title"
+                        onChange={handleNoteChange}
                         type="text"
                         className="form-control"
                      />
@@ -757,8 +786,8 @@ const CourseDetail = () => {
                         Note Content
                      </label>
                      <textarea
-                        onChange={null}
-                        defaultValue={null}
+                        onChange={handleNoteChange}
+                        defaultValue={selectedNote?.note}
                         name="note"
                         className="form-control"
                         cols="30"
@@ -768,7 +797,7 @@ const CourseDetail = () => {
                   <button
                      type="button"
                      className="btn btn-secondary me-2"
-                     onClick={null}
+                     onClick={handleNoteClose}
                   >
                      <i className="fas fa-arrow-left"></i> Close
                   </button>
