@@ -245,6 +245,18 @@ const CourseDetail = () => {
       }
    }, [selectedConversation]);
 
+   const handleSearchQuestion = (event) => {
+      const query = event.target.value.toLowerCase();
+      if (query === "") {
+         fetchCourseDetail();
+      } else {
+         const filtered = question?.filter((q) => {
+            return q.title.toLowerCase().includes(query);
+         });
+         setQuestion(filtered);
+      }
+   };
+
    return (
       <>
          <BaseHeader />
@@ -690,6 +702,9 @@ const CourseDetail = () => {
                                                                type="search"
                                                                placeholder="Search"
                                                                aria-label="Search"
+                                                               onChange={
+                                                                  handleSearchQuestion
+                                                               }
                                                             />
                                                             <button
                                                                className="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-primary-hover text-reset"
@@ -968,9 +983,13 @@ const CourseDetail = () => {
                                  <a href="#">
                                     <img
                                        className="avatar-img rounded-circle"
-                                       src={m.profile.image?.startsWith("http://127.0.0.1:8000")
-                              ? m.profile.image
-                              : `http://127.0.0.1:8000${m.profile.image}`}
+                                       src={
+                                          m.profile.image?.startsWith(
+                                             "http://127.0.0.1:8000"
+                                          )
+                                             ? m.profile.image
+                                             : `http://127.0.0.1:8000${m.profile.image}`
+                                       }
                                        style={{
                                           width: "40px",
                                           height: "40px",
