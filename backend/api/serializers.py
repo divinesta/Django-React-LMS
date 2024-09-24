@@ -219,6 +219,14 @@ class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.Wishlist
         fields = '__all__'
+        
+    def __init__(self, *args, **kwargs):
+        super(WishlistSerializer, self).__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request and request.method == "POST":
+            self.Meta.depth = 0
+        else:
+            self.Meta.depth = 3
 
 
 class CountrySerializer(serializers.ModelSerializer):

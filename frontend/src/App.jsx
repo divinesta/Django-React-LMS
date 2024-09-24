@@ -14,15 +14,16 @@ import CreateNewPassword from "./views/auth/CreateNewPassword";
 import Index from "./views/base/Index";
 import CourseDetail from "./views/base/CourseDetail";
 import Cart from "./views/base/Cart";
-import Checkout from "./views/base/Checkout"
+import Checkout from "./views/base/Checkout";
 import Success from "./views/base/Success";
 import Search from "./views/base/Search";
 
 // Student Routes
-import StudentDashboard from "./views/student/Dashboard"
+import StudentDashboard from "./views/student/Dashboard";
 import StudentCourses from "./views/student/Courses";
 import StudentCourseDetail from "./views/student/CourseDetail";
 import StudentChangePassword from "./views/student/ChangePassword";
+import StudentWishlist from "./views/student/Wishlist";
 
 const App = () => {
    const cart_id = CartId();
@@ -42,33 +43,22 @@ const App = () => {
                   <Route path="/register/" element={<Register />} />
                   <Route path="/login/" element={<Login />} />
                   <Route path="/logout/" element={<Logout />} />
-                  <Route
-                     path="/forgot-password/"
-                     element={<ForgotPassword />}
-                  />
-                  <Route
-                     path="/create-new-password/"
-                     element={<CreateNewPassword />}
-                  />
+                  <Route path="/forgot-password/" element={<ForgotPassword />} />
+                  <Route path="/create-new-password/" element={<CreateNewPassword />} />
                   {/* Base Routes */}
                   <Route path="/" element={<Index />} />
-                  <Route
-                     path="/course-detail/:slug/"
-                     element={<CourseDetail />}
-                  />
+                  <Route path="/course-detail/:slug/" element={<CourseDetail />} />
                   <Route path="/cart/" element={<Cart />} />
                   <Route path="/checkout/:order_oid/" element={<Checkout />} />
-                  <Route
-                     path="/payment-success/:order_oid/"
-                     element={<Success />}
-                  />
+                  <Route path="/payment-success/:order_oid/" element={<Success />} />
                   <Route path="/search/" element={<Search />} />
 
                   {/* Student Routes */}
-                  <Route path="/student/dashboard/" element={<StudentDashboard />}/>
+                  <Route path="/student/dashboard/" element={<StudentDashboard />} />
                   <Route path="/student/change-password/" element={<StudentChangePassword />} />
                   <Route path="/student/courses/" element={<StudentCourses />} />
                   <Route path="/student/courses/:enrollment_id/" element={<StudentCourseDetail />} />
+                  <Route path="/student/wishlist/" element={<StudentWishlist />} />
                </Routes>
             </MainWrapper>
          </BrowserRouter>
