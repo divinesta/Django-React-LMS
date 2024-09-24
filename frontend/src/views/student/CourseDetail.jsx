@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
@@ -20,19 +20,22 @@ const CourseDetail = () => {
    const [completionPercentage, setCompletionPercentage] = useState(0);
    const [markAsCompletedStatus, setMarkAsCompletedStatus] = useState({});
    const [createNote, setCreateNote] = useState({ title: "", note: "" });
-   const [selectedNote, setSelectedNote] = useState(null);  
-   const [createMessage, setCreateMessage] = useState({ title: "", message: "" });
+   const [selectedNote, setSelectedNote] = useState(null);
+   const [createMessage, setCreateMessage] = useState({
+      title: "",
+      message: "",
+   });
    const [question, setQuestion] = useState([]);
    const [selectedConversation, setSelectedConversation] = useState(null);
    const param = useParams();
    // console.log(param);
 
-
+   const lastElementRef = useRef();
    //Play lecture modal
    const handleClose = () => setShow(false);
    const handleShow = (variant_item) => {
       setShow(true);
-      setVariantItem(variant_item)
+      setVariantItem(variant_item);
    };
 
    // console.log(variantItem);
@@ -40,7 +43,7 @@ const CourseDetail = () => {
    const handleNoteClose = () => setNoteShow(false);
    const handleNoteShow = (note) => {
       setNoteShow(true);
-      setSelectedNote(note)
+      setSelectedNote(note);
    };
 
    const [ConversationShow, setConversationShow] = useState(false);
@@ -49,7 +52,7 @@ const CourseDetail = () => {
       setConversationShow(true);
       setSelectedConversation(conversation);
    };
-   
+
    const [addQuestionShow, setAddQuestionShow] = useState(false);
    const handleAddQuestionClose = () => setAddQuestionShow(false);
    const handleAddQuestionShow = () => {
@@ -61,42 +64,44 @@ const CourseDetail = () => {
          .get(`student/course-detail/${userId}/${param.enrollment_id}/`)
          .then((res) => {
             setCourse(res.data);
-            setQuestion(res.data.question_answer)
+            setQuestion(res.data.question_answer);
             // console.log(res.data);
-            const percentageCompleted = res.data.completed_lesson?.length / res.data.lectures?.length * 100;
+            const percentageCompleted =
+               (res.data.completed_lesson?.length / res.data.lectures?.length) *
+               100;
             // console.log(percentageCompleted);
-            setCompletionPercentage(percentageCompleted?.toFixed(2))
+            setCompletionPercentage(percentageCompleted?.toFixed(2));
          });
    };
    // console.log(course);
    console.log(question);
-   
 
    useEffect(() => {
       fetchCourseDetail();
    }, []);
 
    const handleMarkLessonAsCompleted = (variantItemId) => {
-   const key = `lecture_${variantItemId}`;
-   setMarkAsCompletedStatus({
-      ...markAsCompletedStatus,
-      [key]: "Updating",
-   });
-
-   const formdata = new FormData();
-   formdata.append("user_id", userId || 0);
-   formdata.append("course_id", course.course?.id);
-   formdata.append("variant_item_id", variantItemId);
-
-   useAxios()
-      .post(`student/course-completed/`, formdata).then((res) => {
-         fetchCourseDetail();
-         setMarkAsCompletedStatus({
-            ...markAsCompletedStatus,
-            [key]: "Updated",
-         });
+      const key = `lecture_${variantItemId}`;
+      setMarkAsCompletedStatus({
+         ...markAsCompletedStatus,
+         [key]: "Updating",
       });
-   }
+
+      const formdata = new FormData();
+      formdata.append("user_id", userId || 0);
+      formdata.append("course_id", course.course?.id);
+      formdata.append("variant_item_id", variantItemId);
+
+      useAxios()
+         .post(`student/course-completed/`, formdata)
+         .then((res) => {
+            fetchCourseDetail();
+            setMarkAsCompletedStatus({
+               ...markAsCompletedStatus,
+               [key]: "Updated",
+            });
+         });
+   };
 
    const handleNoteChange = (event) => {
       setCreateNote({
@@ -106,7 +111,7 @@ const CourseDetail = () => {
    };
 
    // console.log(createNote);
-   
+
    const handleSubmitCreateNote = async (e) => {
       e.preventDefault();
       const formdata = new FormData();
@@ -117,7 +122,12 @@ const CourseDetail = () => {
       formdata.append("note", createNote.note);
 
       try {
-         await useAxios().post(`student/course-note/${userId}/${param.enrollment_id}/`, formdata).then((res) => {
+         await useAxios()
+            .post(
+               `student/course-note/${userId}/${param.enrollment_id}/`,
+               formdata
+            )
+            .then((res) => {
                fetchCourseDetail();
                Toast.fire({
                   icon: "success",
@@ -130,7 +140,6 @@ const CourseDetail = () => {
       }
    };
 
-
    const handleSubmitNoteEdit = async (e, noteId) => {
       e.preventDefault();
       const formdata = new FormData();
@@ -141,8 +150,12 @@ const CourseDetail = () => {
       formdata.append("note", createNote.note || selectedNote?.note);
 
       try {
-         useAxios().patch(
-            `student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`, formdata).then((res) => {
+         useAxios()
+            .patch(
+               `student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`,
+               formdata
+            )
+            .then((res) => {
                fetchCourseDetail();
                Toast.fire({
                   icon: "success",
@@ -153,11 +166,15 @@ const CourseDetail = () => {
       } catch (error) {
          console.log(error);
       }
-   }
+   };
 
    const handleNoteDelete = async (noteId) => {
       try {
-         useAxios().delete(`student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`).then((res) => {
+         useAxios()
+            .delete(
+               `student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`
+            )
+            .then((res) => {
                fetchCourseDetail();
                Toast.fire({
                   icon: "success",
@@ -167,7 +184,7 @@ const CourseDetail = () => {
       } catch (error) {
          console.log(error);
       }
-   }
+   };
 
    const handleMessageChange = (event) => {
       setCreateMessage({
@@ -177,9 +194,9 @@ const CourseDetail = () => {
    };
 
    // console.log(createMessage);
-   
+
    const handleSaveQuestion = async (e) => {
-      e.preventDefault()
+      e.preventDefault();
 
       const formdata = new FormData();
       formdata.append("user_id", userId);
@@ -188,19 +205,45 @@ const CourseDetail = () => {
       formdata.append("message", createMessage.message);
 
       try {
-         await useAxios().post(`student/question-answer-list-create/${course.course?.id}/`, formdata).then((res) => {
-            fetchCourseDetail();
-            handleAddQuestionClose()
-            Toast.fire({
-               icon: "success",
-               title: "Question sent",
+         await useAxios()
+            .post(
+               `student/question-answer-list-create/${course.course?.id}/`,
+               formdata
+            )
+            .then((res) => {
+               fetchCourseDetail();
+               handleAddQuestionClose();
+               Toast.fire({
+                  icon: "success",
+                  title: "Question sent",
+               });
+               console.log(res.data);
             });
-            console.log(res.data);
-         })
       } catch (error) {
          console.log(error);
       }
-   }
+   };
+
+   const sendNewMessage = async (e) => {
+      e.preventDefault();
+      const formdata = new FormData();
+      formdata.append("course_id", course.course?.id);
+      formdata.append("user_id", userId);
+      formdata.append("message", createMessage.message);
+      formdata.append("qa_id", selectedConversation?.qa_id);
+
+      useAxios()
+         .post(`student/question-answer-message-create/`, formdata)
+         .then((res) => {
+            setSelectedConversation(res.data.question);
+         });
+   };
+
+   useEffect(() => {
+      if (lastElementRef.current) {
+         lastElementRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+   }, [selectedConversation]);
 
    return (
       <>
@@ -925,7 +968,9 @@ const CourseDetail = () => {
                                  <a href="#">
                                     <img
                                        className="avatar-img rounded-circle"
-                                       src={m.profile?.image}
+                                       src={m.profile.image?.startsWith("http://127.0.0.1:8000")
+                              ? m.profile.image
+                              : `http://127.0.0.1:8000${m.profile.image}`}
                                        style={{
                                           width: "40px",
                                           height: "40px",
@@ -956,7 +1001,9 @@ const CourseDetail = () => {
                                                    color: "gray",
                                                 }}
                                              >
-                                                {moment(m.date).format('DD MMM, YYYY')}
+                                                {moment(m.date).format(
+                                                   "DD MMM, YYYY"
+                                                )}
                                              </span>
                                           </h6>
                                           <p className="mb-0 mt-3  ">
@@ -969,19 +1016,22 @@ const CourseDetail = () => {
                            </div>
                         </li>
                      ))}
+
+                     <div ref={lastElementRef}></div>
                   </ul>
 
-                  <form class="w-100 d-flex">
+                  <form class="w-100 d-flex" onSubmit={sendNewMessage}>
                      <textarea
                         name="message"
                         class="one form-control pe-4 bg-light w-75"
                         id="autoheighttextarea"
                         rows="2"
+                        onChange={handleMessageChange}
                         placeholder="What's your question?"
                      ></textarea>
                      <button
                         class="btn btn-primary ms-2 mb-0 w-25"
-                        type="button"
+                        type="submit"
                      >
                         Post <i className="fas fa-paper-plane"></i>
                      </button>
@@ -1065,6 +1115,6 @@ const CourseDetail = () => {
          <BaseFooter />
       </>
    );
-}
+};
 
 export default CourseDetail;

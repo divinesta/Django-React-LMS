@@ -555,7 +555,7 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
 
                     return Response({"message": "Payment Successful", "icon": "success"}, status=status.HTTP_200_OK)
                 else:
-                    return Response({"message": "Already Paid", "icon": "warning"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message": "Already Paid", "icon": "warning"}, status=status.HTTP_200_OK)
             else:
                 return Response({"message": "Payment Not Successful", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)
 
