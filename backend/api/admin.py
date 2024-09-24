@@ -61,7 +61,7 @@ class NoteAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ['course', 'user', 'rating', 'review', 'active', 'date']
+    list_display = ['id', 'course', 'user', 'rating', 'review', 'active', 'date']
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):

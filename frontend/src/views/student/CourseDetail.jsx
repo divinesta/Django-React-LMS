@@ -27,6 +27,8 @@ const CourseDetail = () => {
    });
    const [question, setQuestion] = useState([]);
    const [selectedConversation, setSelectedConversation] = useState(null);
+   const [createReview, setCreateReview] = useState({ rating: 1, review: "" });
+   const [studentReview, setStudentReview] = useState([]);
    const param = useParams();
    // console.log(param);
 
@@ -65,16 +67,16 @@ const CourseDetail = () => {
          .then((res) => {
             setCourse(res.data);
             setQuestion(res.data.question_answer);
+            setStudentReview(res.data.review);
             // console.log(res.data);
-            const percentageCompleted =
-               (res.data.completed_lesson?.length / res.data.lectures?.length) *
-               100;
+            const percentageCompleted = (res.data.completed_lesson?.length / res.data.lectures?.length) * 100;
             // console.log(percentageCompleted);
             setCompletionPercentage(percentageCompleted?.toFixed(2));
          });
    };
    // console.log(course);
-   console.log(question);
+   // console.log(question);
+   // console.log(studentReview);
 
    useEffect(() => {
       fetchCourseDetail();
@@ -123,10 +125,7 @@ const CourseDetail = () => {
 
       try {
          await useAxios()
-            .post(
-               `student/course-note/${userId}/${param.enrollment_id}/`,
-               formdata
-            )
+            .post(`student/course-note/${userId}/${param.enrollment_id}/`, formdata)
             .then((res) => {
                fetchCourseDetail();
                Toast.fire({
@@ -151,10 +150,7 @@ const CourseDetail = () => {
 
       try {
          useAxios()
-            .patch(
-               `student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`,
-               formdata
-            )
+            .patch(`student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`, formdata)
             .then((res) => {
                fetchCourseDetail();
                Toast.fire({
@@ -171,9 +167,7 @@ const CourseDetail = () => {
    const handleNoteDelete = async (noteId) => {
       try {
          useAxios()
-            .delete(
-               `student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`
-            )
+            .delete(`student/course-note-detail/${userId}/${param.enrollment_id}/${noteId}/`)
             .then((res) => {
                fetchCourseDetail();
                Toast.fire({
@@ -206,10 +200,7 @@ const CourseDetail = () => {
 
       try {
          await useAxios()
-            .post(
-               `student/question-answer-list-create/${course.course?.id}/`,
-               formdata
-            )
+            .post(`student/question-answer-list-create/${course.course?.id}/`, formdata)
             .then((res) => {
                fetchCourseDetail();
                handleAddQuestionClose();
@@ -257,6 +248,57 @@ const CourseDetail = () => {
       }
    };
 
+   const handleReviewChange = (event) => {
+      setCreateReview({
+         ...createReview,
+         [event.target.name]: event.target.value,
+      });
+   };
+
+   // console.log(createReview);
+
+   const handleCreateReviewSubmit = (e) => {
+      e.preventDefault();
+
+      const formdata = new FormData();
+      formdata.append("course_id", course.course?.id);
+      formdata.append("user_id", userId);
+      formdata.append("rating", createReview.rating);
+      formdata.append("review", createReview.review);
+
+      useAxios()
+         .post(`student/rate-course/`, formdata)
+         .then((res) => {
+            console.log(res.data);
+            fetchCourseDetail();
+            Toast.fire({
+               icon: "success",
+               title: "Review created",
+            });
+         });
+   };
+
+   const handleUpdateReviewSubmit = (e) => {
+      e.preventDefault();
+
+      const formdata = new FormData();
+      formdata.append("course", course.course?.id);
+      formdata.append("user", userId);
+      formdata.append("rating", createReview.rating || studentReview?.rating);
+      formdata.append("review", createReview.review || studentReview?.review);
+
+      useAxios()
+         .patch(`student/review-detail/${userId}/${studentReview?.id}/`, formdata)
+         .then((res) => {
+            console.log(res.data);
+            fetchCourseDetail();
+            Toast.fire({
+               icon: "success",
+               title: "Review updated",
+            });
+         });
+   };
+
    return (
       <>
          <BaseHeader />
@@ -282,16 +324,9 @@ const CourseDetail = () => {
                                  <div className="card shadow rounded-2 p-0 mt-n5">
                                     {/* Tabs START */}
                                     <div className="card-header border-bottom px-4 pt-3 pb-0">
-                                       <ul
-                                          className="nav nav-bottom-line py-0"
-                                          id="course-pills-tab"
-                                          role="tablist"
-                                       >
+                                       <ul className="nav nav-bottom-line py-0" id="course-pills-tab" role="tablist">
                                           {/* Tab item */}
-                                          <li
-                                             className="nav-item me-2 me-sm-4"
-                                             role="presentation"
-                                          >
+                                          <li className="nav-item me-2 me-sm-4" role="presentation">
                                              <button
                                                 className="nav-link mb-2 mb-md-0 active"
                                                 id="course-pills-tab-1"
@@ -306,10 +341,7 @@ const CourseDetail = () => {
                                              </button>
                                           </li>
                                           {/* Tab item */}
-                                          <li
-                                             className="nav-item me-2 me-sm-4"
-                                             role="presentation"
-                                          >
+                                          <li className="nav-item me-2 me-sm-4" role="presentation">
                                              <button
                                                 className="nav-link mb-2 mb-md-0"
                                                 id="course-pills-tab-2"
@@ -324,10 +356,7 @@ const CourseDetail = () => {
                                              </button>
                                           </li>
                                           {/* Tab item */}
-                                          <li
-                                             className="nav-item me-2 me-sm-4"
-                                             role="presentation"
-                                          >
+                                          <li className="nav-item me-2 me-sm-4" role="presentation">
                                              <button
                                                 className="nav-link mb-2 mb-md-0"
                                                 id="course-pills-tab-3"
@@ -342,10 +371,7 @@ const CourseDetail = () => {
                                              </button>
                                           </li>
 
-                                          <li
-                                             className="nav-item me-2 me-sm-4"
-                                             role="presentation"
-                                          >
+                                          <li className="nav-item me-2 me-sm-4" role="presentation">
                                              <button
                                                 className="nav-link mb-2 mb-md-0"
                                                 id="course-pills-tab-4"
@@ -364,22 +390,11 @@ const CourseDetail = () => {
                                     {/* Tabs END */}
                                     {/* Tab contents START */}
                                     <div className="card-body p-sm-4">
-                                       <div
-                                          className="tab-content"
-                                          id="course-pills-tabContent"
-                                       >
+                                       <div className="tab-content" id="course-pills-tabContent">
                                           {/* Content START */}
-                                          <div
-                                             className="tab-pane fade show active"
-                                             id="course-pills-1"
-                                             role="tabpanel"
-                                             aria-labelledby="course-pills-tab-1"
-                                          >
+                                          <div className="tab-pane fade show active" id="course-pills-1" role="tabpanel" aria-labelledby="course-pills-tab-1">
                                              {/* Accordion START */}
-                                             <div
-                                                className="accordion accordion-icon accordion-border"
-                                                id="accordionExample2"
-                                             >
+                                             <div className="accordion accordion-icon accordion-border" id="accordionExample2">
                                                 <div className="progress mb-3">
                                                    <div
                                                       className="progress-bar"
@@ -387,9 +402,7 @@ const CourseDetail = () => {
                                                       style={{
                                                          width: `${completionPercentage}%`,
                                                       }}
-                                                      aria-valuenow={
-                                                         completionPercentage
-                                                      }
+                                                      aria-valuenow={completionPercentage}
                                                       aria-valuemin={0}
                                                       aria-valuemax={100}
                                                    >
@@ -398,224 +411,96 @@ const CourseDetail = () => {
                                                 </div>
                                                 {/* Item */}
 
-                                                {course?.curriculum?.map(
-                                                   (c, index) => (
-                                                      <div
-                                                         key={index}
-                                                         className="accordion-item mb-3 bg-light"
-                                                      >
-                                                         <h6
-                                                            className="accordion-header font-base"
-                                                            id="heading-1"
+                                                {course?.curriculum?.map((c, index) => (
+                                                   <div key={index} className="accordion-item mb-3 bg-light">
+                                                      <h6 className="accordion-header font-base" id="heading-1">
+                                                         <button
+                                                            className="accordion-button p-3 w-100 bg-light btn border fw-bold rounded d-sm-flex d-inline-block collapsed"
+                                                            type="button"
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target={`#collapse-${c.variant_id}`}
+                                                            aria-expanded="true"
+                                                            aria-controls={`collapse-${c.variant_id}`}
                                                          >
-                                                            <button
-                                                               className="accordion-button p-3 w-100 bg-light btn border fw-bold rounded d-sm-flex d-inline-block collapsed"
-                                                               type="button"
-                                                               data-bs-toggle="collapse"
-                                                               data-bs-target={`#collapse-${c.variant_id}`}
-                                                               aria-expanded="true"
-                                                               aria-controls={`collapse-${c.variant_id}`}
-                                                            >
-                                                               {c.title}
-                                                               <span className="small ms-0 ms-sm-2">
-                                                                  (
-                                                                  {
-                                                                     c
-                                                                        .variant_items
-                                                                        ?.length
-                                                                  }{" "}
-                                                                  Lecture
-                                                                  {c
-                                                                     .variant_items
-                                                                     ?.length >
-                                                                     1 && "s"}
-                                                                  )
-                                                               </span>
-                                                            </button>
-                                                         </h6>
-                                                         <div
-                                                            id={`collapse-${c.variant_id}`}
-                                                            className="accordion-collapse collapse show"
-                                                            aria-labelledby="heading-1"
-                                                            data-bs-parent="#accordionExample2"
-                                                         >
-                                                            <div className="accordion-body mt-3">
-                                                               {/* Course lecture */}
-                                                               {c.variant_items?.map(
-                                                                  (
-                                                                     l,
-                                                                     index
-                                                                  ) => (
-                                                                     <div
-                                                                        key={
-                                                                           index
-                                                                        }
-                                                                     >
-                                                                        <div className="d-flex justify-content-between align-items-center">
-                                                                           <div className="position-relative d-flex align-items-center">
-                                                                              <button
-                                                                                 onClick={() =>
-                                                                                    handleShow(
-                                                                                       l
-                                                                                    )
-                                                                                 }
-                                                                                 className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
-                                                                              >
-                                                                                 <i className="fas fa-play me-0" />
-                                                                              </button>
-                                                                              <span className="d-inline-block text-truncate ms-2 mb-0 h6 fw-light w-100px w-sm-200px w-md-400px">
-                                                                                 {
-                                                                                    l.title
-                                                                                 }
-                                                                              </span>
-                                                                           </div>
-                                                                           <div className="d-flex">
-                                                                              <p className="mb-0">
-                                                                                 {l.content_duration ||
-                                                                                    "0m 0s"}
-                                                                              </p>
-                                                                              <input
-                                                                                 type="checkbox"
-                                                                                 className="form-check-input ms-2"
-                                                                                 onChange={() =>
-                                                                                    handleMarkLessonAsCompleted(
-                                                                                       l.variant_item_id
-                                                                                    )
-                                                                                 }
-                                                                                 checked={course.completed_lesson?.some(
-                                                                                    (
-                                                                                       cl
-                                                                                    ) =>
-                                                                                       cl
-                                                                                          .variant_item
-                                                                                          .id ===
-                                                                                       l.id
-                                                                                 )}
-                                                                                 name=""
-                                                                                 id=""
-                                                                              />
-                                                                           </div>
-                                                                        </div>
-                                                                        <hr />
+                                                            {c.title}
+                                                            <span className="small ms-0 ms-sm-2">
+                                                               ({c.variant_items?.length} Lecture
+                                                               {c.variant_items?.length > 1 && "s"})
+                                                            </span>
+                                                         </button>
+                                                      </h6>
+                                                      <div id={`collapse-${c.variant_id}`} className="accordion-collapse collapse show" aria-labelledby="heading-1" data-bs-parent="#accordionExample2">
+                                                         <div className="accordion-body mt-3">
+                                                            {/* Course lecture */}
+                                                            {c.variant_items?.map((l, index) => (
+                                                               <div key={index}>
+                                                                  <div className="d-flex justify-content-between align-items-center">
+                                                                     <div className="position-relative d-flex align-items-center">
+                                                                        <button onClick={() => handleShow(l)} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static">
+                                                                           <i className="fas fa-play me-0" />
+                                                                        </button>
+                                                                        <span className="d-inline-block text-truncate ms-2 mb-0 h6 fw-light w-100px w-sm-200px w-md-400px">{l.title}</span>
                                                                      </div>
-                                                                  )
-                                                               )}
-                                                            </div>
+                                                                     <div className="d-flex">
+                                                                        <p className="mb-0">{l.content_duration || "0m 0s"}</p>
+                                                                        <input
+                                                                           type="checkbox"
+                                                                           className="form-check-input ms-2"
+                                                                           onChange={() => handleMarkLessonAsCompleted(l.variant_item_id)}
+                                                                           checked={course.completed_lesson?.some((cl) => cl.variant_item.id === l.id)}
+                                                                           name=""
+                                                                           id=""
+                                                                        />
+                                                                     </div>
+                                                                  </div>
+                                                                  <hr />
+                                                               </div>
+                                                            ))}
                                                          </div>
                                                       </div>
-                                                   )
-                                                )}
+                                                   </div>
+                                                ))}
                                              </div>
                                              {/* Accordion END */}
                                           </div>
 
-                                          <div
-                                             className="tab-pane fade"
-                                             id="course-pills-2"
-                                             role="tabpanel"
-                                             aria-labelledby="course-pills-tab-2"
-                                          >
+                                          <div className="tab-pane fade" id="course-pills-2" role="tabpanel" aria-labelledby="course-pills-tab-2">
                                              <div className="card">
                                                 <div className="card-header border-bottom p-0 pb-3">
                                                    <div className="d-sm-flex justify-content-between align-items-center">
-                                                      <h4 className="mb-0 p-3">
-                                                         All Notes
-                                                      </h4>
+                                                      <h4 className="mb-0 p-3">All Notes</h4>
                                                       {/* Add Note Modal */}
-                                                      <button
-                                                         type="button"
-                                                         className="btn btn-primary me-3"
-                                                         data-bs-toggle="modal"
-                                                         data-bs-target="#exampleModal"
-                                                      >
-                                                         Add Note{" "}
-                                                         <i className="fas fa-pen"></i>
+                                                      <button type="button" className="btn btn-primary me-3" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                                         Add Note <i className="fas fa-pen"></i>
                                                       </button>
-                                                      <div
-                                                         className="modal fade"
-                                                         id="exampleModal"
-                                                         tabIndex={-1}
-                                                         aria-labelledby="exampleModalLabel"
-                                                         aria-hidden="true"
-                                                      >
+                                                      <div className="modal fade" id="exampleModal" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
                                                          <div className="modal-dialog modal-dialog-centered">
                                                             <div className="modal-content">
                                                                <div className="modal-header">
-                                                                  <h5
-                                                                     className="modal-title"
-                                                                     id="exampleModalLabel"
-                                                                  >
-                                                                     Add New
-                                                                     Note{" "}
-                                                                     <i className="fas fa-pen"></i>
+                                                                  <h5 className="modal-title" id="exampleModalLabel">
+                                                                     Add New Note <i className="fas fa-pen"></i>
                                                                   </h5>
-                                                                  <button
-                                                                     type="button"
-                                                                     className="btn-close"
-                                                                     data-bs-dismiss="modal"
-                                                                     aria-label="Close"
-                                                                  />
+                                                                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
                                                                </div>
                                                                <div className="modal-body">
-                                                                  <form
-                                                                     onSubmit={
-                                                                        handleSubmitCreateNote
-                                                                     }
-                                                                  >
+                                                                  <form onSubmit={handleSubmitCreateNote}>
                                                                      <div className="mb-3">
-                                                                        <label
-                                                                           htmlFor="exampleInputEmail1"
-                                                                           className="form-label"
-                                                                        >
-                                                                           Note
-                                                                           Title
+                                                                        <label htmlFor="exampleInputEmail1" className="form-label">
+                                                                           Note Title
                                                                         </label>
-                                                                        <input
-                                                                           type="text"
-                                                                           className="form-control"
-                                                                           name="title"
-                                                                           onChange={
-                                                                              handleNoteChange
-                                                                           }
-                                                                        />
+                                                                        <input type="text" className="form-control" name="title" onChange={handleNoteChange} />
                                                                      </div>
                                                                      <div className="mb-3">
-                                                                        <label
-                                                                           htmlFor="exampleInputPassword1"
-                                                                           className="form-label"
-                                                                        >
-                                                                           Note
-                                                                           Content
+                                                                        <label htmlFor="exampleInputPassword1" className="form-label">
+                                                                           Note Content
                                                                         </label>
-                                                                        <textarea
-                                                                           className="form-control"
-                                                                           id=""
-                                                                           cols="30"
-                                                                           rows="10"
-                                                                           name="note"
-                                                                           onChange={
-                                                                              handleNoteChange
-                                                                           }
-                                                                        ></textarea>
+                                                                        <textarea className="form-control" id="" cols="30" rows="10" name="note" onChange={handleNoteChange}></textarea>
                                                                      </div>
-                                                                     <button
-                                                                        type="button"
-                                                                        className="btn btn-secondary me-2"
-                                                                        data-bs-dismiss="modal"
-                                                                     >
-                                                                        <i className="fas fa-arrow-left"></i>{" "}
-                                                                        Close
+                                                                     <button type="button" className="btn btn-secondary me-2" data-bs-dismiss="modal">
+                                                                        <i className="fas fa-arrow-left"></i> Close
                                                                      </button>
-                                                                     <button
-                                                                        type="submit"
-                                                                        className="btn btn-primary"
-                                                                        onClick={
-                                                                           handleNoteClose
-                                                                        }
-                                                                     >
-                                                                        Save
-                                                                        Note{" "}
-                                                                        <i className="fas fa-check-circle"></i>
+                                                                     <button type="submit" className="btn btn-primary" onClick={handleNoteClose}>
+                                                                        Save Note <i className="fas fa-check-circle"></i>
                                                                      </button>
                                                                   </form>
                                                                </div>
@@ -626,73 +511,37 @@ const CourseDetail = () => {
                                                 </div>
                                                 <div className="card-body p-0 pt-3">
                                                    {/* Note item start */}
-                                                   {course?.note?.map(
-                                                      (n, index) => (
-                                                         <div key={index}>
-                                                            <div className="row g-4 p-3">
-                                                               <div className="col-sm-11 col-xl-11 shadow p-3 m-3 rounded">
-                                                                  <h5>
-                                                                     {" "}
-                                                                     {n.title}
-                                                                  </h5>
-                                                                  <p>
-                                                                     {" "}
-                                                                     {n.note}
-                                                                  </p>
-                                                                  {/* Buttons */}
-                                                                  <div className="hstack gap-3 flex-wrap">
-                                                                     <a
-                                                                        onClick={() =>
-                                                                           handleNoteShow(
-                                                                              n
-                                                                           )
-                                                                        }
-                                                                        className="btn btn-success mb-0"
-                                                                     >
-                                                                        <i className="bi bi-pencil-square me-2" />{" "}
-                                                                        Edit
-                                                                     </a>
-                                                                     <a
-                                                                        onClick={() =>
-                                                                           handleNoteDelete(
-                                                                              n.id
-                                                                           )
-                                                                        }
-                                                                        className="btn btn-danger mb-0"
-                                                                     >
-                                                                        <i className="bi bi-trash me-2" />{" "}
-                                                                        Delete
-                                                                     </a>
-                                                                  </div>
+                                                   {course?.note?.map((n, index) => (
+                                                      <div key={index}>
+                                                         <div className="row g-4 p-3">
+                                                            <div className="col-sm-11 col-xl-11 shadow p-3 m-3 rounded">
+                                                               <h5> {n.title}</h5>
+                                                               <p> {n.note}</p>
+                                                               {/* Buttons */}
+                                                               <div className="hstack gap-3 flex-wrap">
+                                                                  <a onClick={() => handleNoteShow(n)} className="btn btn-success mb-0">
+                                                                     <i className="bi bi-pencil-square me-2" /> Edit
+                                                                  </a>
+                                                                  <a onClick={() => handleNoteDelete(n.id)} className="btn btn-danger mb-0">
+                                                                     <i className="bi bi-trash me-2" /> Delete
+                                                                  </a>
                                                                </div>
                                                             </div>
-                                                            <hr />
                                                          </div>
-                                                      )
-                                                   )}
+                                                         <hr />
+                                                      </div>
+                                                   ))}
 
-                                                   {course?.note?.length <
-                                                      1 && (
-                                                      <p className="m-3 p-3">
-                                                         No notes
-                                                      </p>
-                                                   )}
+                                                   {course?.note?.length < 1 && <p className="m-3 p-3">No notes</p>}
                                                 </div>
                                              </div>
                                           </div>
-                                          <div
-                                             className="tab-pane fade"
-                                             id="course-pills-3"
-                                             role="tabpanel"
-                                             aria-labelledby="course-pills-tab-3"
-                                          >
+                                          <div className="tab-pane fade" id="course-pills-3" role="tabpanel" aria-labelledby="course-pills-tab-3">
                                              <div className="card">
                                                 {/* Card header */}
                                                 <div className="card-header border-bottom p-0 pb-3">
                                                    {/* Title */}
-                                                   <h4 className="mb-3 p-3">
-                                                      Discussion
-                                                   </h4>
+                                                   <h4 className="mb-3 p-3">Discussion</h4>
                                                    <form className="row g-4 p-3">
                                                       {/* Search */}
                                                       <div className="col-sm-6 col-lg-9">
@@ -702,9 +551,7 @@ const CourseDetail = () => {
                                                                type="search"
                                                                placeholder="Search"
                                                                aria-label="Search"
-                                                               onChange={
-                                                                  handleSearchQuestion
-                                                               }
+                                                               onChange={handleSearchQuestion}
                                                             />
                                                             <button
                                                                className="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-primary-hover text-reset"
@@ -715,14 +562,7 @@ const CourseDetail = () => {
                                                          </div>
                                                       </div>
                                                       <div className="col-sm-6 col-lg-3">
-                                                         <a
-                                                            onClick={
-                                                               handleAddQuestionShow
-                                                            }
-                                                            className="btn btn-primary mb-0 w-100"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#modalCreatePost"
-                                                         >
+                                                         <a onClick={handleAddQuestionShow} className="btn btn-primary mb-0 w-100" data-bs-toggle="modal" data-bs-target="#modalCreatePost">
                                                             Ask Question
                                                          </a>
                                                       </div>
@@ -732,147 +572,127 @@ const CourseDetail = () => {
                                                 <div className="card-body p-0 pt-3">
                                                    <div className="vstack gap-3 p-3">
                                                       {/* Question item START */}
-                                                      {question?.map(
-                                                         (q, index) => (
-                                                            <div
-                                                               className="shadow rounded-3 p-3"
-                                                               key={index}
-                                                            >
-                                                               <div className="d-sm-flex justify-content-sm-between mb-3">
-                                                                  <div className="d-flex align-items-center">
-                                                                     <div className="avatar avatar-sm flex-shrink-0">
-                                                                        <img
-                                                                           src={
-                                                                              q
-                                                                                 .profile
-                                                                                 .image
-                                                                           }
-                                                                           className="avatar-img rounded-circle"
-                                                                           alt="avatar"
-                                                                           style={{
-                                                                              width: "60px",
-                                                                              height:
-                                                                                 "60px",
-                                                                              borderRadius:
-                                                                                 "50%",
-                                                                              objectFit:
-                                                                                 "cover",
-                                                                           }}
-                                                                        />
-                                                                     </div>
-                                                                     <div className="ms-2">
-                                                                        <h6 className="mb-0">
-                                                                           <a
-                                                                              href="#"
-                                                                              className="text-decoration-none text-dark"
-                                                                           >
-                                                                              {
-                                                                                 q
-                                                                                    .profile
-                                                                                    .full_name
-                                                                              }
-                                                                           </a>
-                                                                        </h6>
-                                                                        <small>
-                                                                           {moment(
-                                                                              q.date
-                                                                           ).format(
-                                                                              "DD MMM, YYYY"
-                                                                           )}
-                                                                        </small>
-                                                                     </div>
+                                                      {question?.map((q, index) => (
+                                                         <div className="shadow rounded-3 p-3" key={index}>
+                                                            <div className="d-sm-flex justify-content-sm-between mb-3">
+                                                               <div className="d-flex align-items-center">
+                                                                  <div className="avatar avatar-sm flex-shrink-0">
+                                                                     <img
+                                                                        src={q.profile.image}
+                                                                        className="avatar-img rounded-circle"
+                                                                        alt="avatar"
+                                                                        style={{
+                                                                           width: "60px",
+                                                                           height: "60px",
+                                                                           borderRadius: "50%",
+                                                                           objectFit: "cover",
+                                                                        }}
+                                                                     />
+                                                                  </div>
+                                                                  <div className="ms-2">
+                                                                     <h6 className="mb-0">
+                                                                        <a href="#" className="text-decoration-none text-dark">
+                                                                           {q.profile.full_name}
+                                                                        </a>
+                                                                     </h6>
+                                                                     <small>{moment(q.date).format("DD MMM, YYYY")}</small>
                                                                   </div>
                                                                </div>
-                                                               <h5>
-                                                                  {q.title}
-                                                               </h5>
-                                                               <button
-                                                                  className="btn btn-primary btn-sm mb-3 mt-3"
-                                                                  onClick={() =>
-                                                                     handleConversationShow(
-                                                                        q
-                                                                     )
-                                                                  }
-                                                               >
-                                                                  Join
-                                                                  Conversation{" "}
-                                                                  <i className="fas fa-arrow-right"></i>
-                                                               </button>
                                                             </div>
-                                                         )
-                                                      )}
+                                                            <h5>{q.title}</h5>
+                                                            <button className="btn btn-primary btn-sm mb-3 mt-3" onClick={() => handleConversationShow(q)}>
+                                                               Join Conversation <i className="fas fa-arrow-right"></i>
+                                                            </button>
+                                                         </div>
+                                                      ))}
                                                    </div>
                                                 </div>
                                              </div>
                                           </div>
-                                          <div
-                                             className="tab-pane fade"
-                                             id="course-pills-4"
-                                             role="tabpanel"
-                                             aria-labelledby="course-pills-tab-4"
-                                          >
+                                          <div className="tab-pane fade" id="course-pills-4" role="tabpanel" aria-labelledby="course-pills-tab-4">
                                              <div className="card">
                                                 {/* Card header */}
                                                 <div className="card-header border-bottom p-0 pb-3">
                                                    {/* Title */}
-                                                   <h4 className="mb-3 p-3">
-                                                      Leave a Review
-                                                   </h4>
+                                                   <h4 className="mb-3 p-3">Leave a Review</h4>
                                                    <div className="mt-2">
-                                                      <form className="row g-3 p-3">
-                                                         {/* Rating */}
-                                                         <div className="col-12 bg-light-input">
-                                                            <select
-                                                               id="inputState2"
-                                                               className="form-select js-choice"
-                                                            >
-                                                               <option
-                                                                  value={1}
+                                                      {!studentReview && (
+                                                         <form className="row g-3 p-3" onSubmit={handleCreateReviewSubmit}>
+                                                            {/* Rating */}
+                                                            <div className="col-12 bg-light-input">
+                                                               <select
+                                                                  id="inputState2"
+                                                                  className="form-select js-choice"
+                                                                  onChange={handleReviewChange}
+                                                                  name="rating"
+                                                                  defaultValue={studentReview?.rating || 0}
                                                                >
-                                                                  ★☆☆☆☆ (1/5)
-                                                               </option>
-                                                               <option
-                                                                  value={2}
+                                                                  <option value={1}>★☆☆☆☆ (1/5)</option>
+                                                                  <option value={2}>★★☆☆☆ (2/5)</option>
+                                                                  <option value={3}>★★★☆☆ (3/5)</option>
+                                                                  <option value={4}>★★★★☆ (4/5)</option>
+                                                                  <option value={5}>★★★★★ (5/5)</option>
+                                                               </select>
+                                                            </div>
+                                                            {/* Message */}
+                                                            <div className="col-12 bg-light-input">
+                                                               <textarea
+                                                                  className="form-control"
+                                                                  id="exampleFormControlTextarea1"
+                                                                  placeholder="Your review"
+                                                                  rows={3}
+                                                                  onChange={handleReviewChange}
+                                                                  name="review"
+                                                                  defaultValue={studentReview?.review || createReview?.review}
+                                                               />
+                                                            </div>
+                                                            {/* Button */}
+                                                            <div className="col-12">
+                                                               <button type="submit" className="btn btn-primary mb-0">
+                                                                  Post Review
+                                                               </button>
+                                                            </div>
+                                                         </form>
+                                                      )}
+
+                                                      {studentReview && (
+                                                         <form className="row g-3 p-3" onSubmit={handleUpdateReviewSubmit}>
+                                                            {/* Rating */}
+                                                            <div className="col-12 bg-light-input">
+                                                               <select
+                                                                  id="inputState2"
+                                                                  className="form-select js-choice"
+                                                                  onChange={handleReviewChange}
+                                                                  name="rating"
+                                                                  defaultValue={studentReview?.rating}
                                                                >
-                                                                  ★★☆☆☆ (2/5)
-                                                               </option>
-                                                               <option
-                                                                  value={3}
-                                                               >
-                                                                  ★★★☆☆ (3/5)
-                                                               </option>
-                                                               <option
-                                                                  value={4}
-                                                               >
-                                                                  ★★★★☆ (4/5)
-                                                               </option>
-                                                               <option
-                                                                  value={5}
-                                                               >
-                                                                  ★★★★★ (5/5)
-                                                               </option>
-                                                            </select>
-                                                         </div>
-                                                         {/* Message */}
-                                                         <div className="col-12 bg-light-input">
-                                                            <textarea
-                                                               className="form-control"
-                                                               id="exampleFormControlTextarea1"
-                                                               placeholder="Your review"
-                                                               rows={3}
-                                                               defaultValue={""}
-                                                            />
-                                                         </div>
-                                                         {/* Button */}
-                                                         <div className="col-12">
-                                                            <button
-                                                               type="submit"
-                                                               className="btn btn-primary mb-0"
-                                                            >
-                                                               Post Review
-                                                            </button>
-                                                         </div>
-                                                      </form>
+                                                                  <option value={1}>★☆☆☆☆ (1/5)</option>
+                                                                  <option value={2}>★★☆☆☆ (2/5)</option>
+                                                                  <option value={3}>★★★☆☆ (3/5)</option>
+                                                                  <option value={4}>★★★★☆ (4/5)</option>
+                                                                  <option value={5}>★★★★★ (5/5)</option>
+                                                               </select>
+                                                            </div>
+                                                            {/* Message */}
+                                                            <div className="col-12 bg-light-input">
+                                                               <textarea
+                                                                  className="form-control"
+                                                                  id="exampleFormControlTextarea1"
+                                                                  placeholder="Your review"
+                                                                  rows={3}
+                                                                  onChange={handleReviewChange}
+                                                                  name="review"
+                                                                  defaultValue={studentReview?.review}
+                                                               />
+                                                            </div>
+                                                            {/* Button */}
+                                                            <div className="col-12">
+                                                               <button type="submit" className="btn btn-primary mb-0">
+                                                                  Update Review
+                                                               </button>
+                                                            </div>
+                                                         </form>
+                                                      )}
                                                    </div>
                                                 </div>
                                              </div>
@@ -895,13 +715,7 @@ const CourseDetail = () => {
                <Modal.Title>Lesson: {variantItem?.title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-               <ReactPlayer
-                  url={variantItem?.file}
-                  controls
-                  playing
-                  width={"100%"}
-                  height={"100%"}
-               />
+               <ReactPlayer url={variantItem?.file} controls playing width={"100%"} height={"100%"} />
             </Modal.Body>
             <Modal.Footer>
                <Button variant="secondary" onClick={handleClose}>
@@ -916,42 +730,20 @@ const CourseDetail = () => {
                <Modal.Title>Note: {selectedNote?.title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-               <form
-                  onSubmit={(e) => handleSubmitNoteEdit(e, selectedNote?.id)}
-               >
+               <form onSubmit={(e) => handleSubmitNoteEdit(e, selectedNote?.id)}>
                   <div className="mb-3">
                      <label htmlFor="exampleInputEmail1" className="form-label">
                         Note Title
                      </label>
-                     <input
-                        defaultValue={selectedNote?.title}
-                        name="title"
-                        onChange={handleNoteChange}
-                        type="text"
-                        className="form-control"
-                     />
+                     <input defaultValue={selectedNote?.title} name="title" onChange={handleNoteChange} type="text" className="form-control" />
                   </div>
                   <div className="mb-3">
-                     <label
-                        htmlFor="exampleInputPassword1"
-                        className="form-label"
-                     >
+                     <label htmlFor="exampleInputPassword1" className="form-label">
                         Note Content
                      </label>
-                     <textarea
-                        onChange={handleNoteChange}
-                        defaultValue={selectedNote?.note}
-                        name="note"
-                        className="form-control"
-                        cols="30"
-                        rows="10"
-                     ></textarea>
+                     <textarea onChange={handleNoteChange} defaultValue={selectedNote?.note} name="note" className="form-control" cols="30" rows="10"></textarea>
                   </div>
-                  <button
-                     type="button"
-                     className="btn btn-secondary me-2"
-                     onClick={handleNoteClose}
-                  >
+                  <button type="button" className="btn btn-secondary me-2" onClick={handleNoteClose}>
                      <i className="fas fa-arrow-left"></i> Close
                   </button>
                   <button type="submit" className="btn btn-primary">
@@ -962,20 +754,13 @@ const CourseDetail = () => {
          </Modal>
 
          {/* Conversation Modal */}
-         <Modal
-            show={ConversationShow}
-            size="lg"
-            onHide={handleConversationClose}
-         >
+         <Modal show={ConversationShow} size="lg" onHide={handleConversationClose}>
             <Modal.Header closeButton>
                <Modal.Title>Lesson: {selectedConversation?.title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                <div className="border p-2 p-sm-4 rounded-3">
-                  <ul
-                     className="list-unstyled mb-0"
-                     style={{ overflowY: "scroll", height: "500px" }}
-                  >
+                  <ul className="list-unstyled mb-0" style={{ overflowY: "scroll", height: "500px" }}>
                      {selectedConversation?.messages?.map((m, index) => (
                         <li key={index} className="comment-item mb-3">
                            <div className="d-flex">
@@ -983,13 +768,7 @@ const CourseDetail = () => {
                                  <a href="#">
                                     <img
                                        className="avatar-img rounded-circle"
-                                       src={
-                                          m.profile.image?.startsWith(
-                                             "http://127.0.0.1:8000"
-                                          )
-                                             ? m.profile.image
-                                             : `http://127.0.0.1:8000${m.profile.image}`
-                                       }
+                                       src={m.profile.image?.startsWith("http://127.0.0.1:8000") ? m.profile.image : `http://127.0.0.1:8000${m.profile.image}`}
                                        style={{
                                           width: "40px",
                                           height: "40px",
@@ -1006,10 +785,7 @@ const CourseDetail = () => {
                                     <div className="d-flex w-100 justify-content-center">
                                        <div className="me-2 ">
                                           <h6 className="mb-1 lead fw-bold">
-                                             <a
-                                                href="#!"
-                                                className="text-decoration-none text-dark"
-                                             >
+                                             <a href="#!" className="text-decoration-none text-dark">
                                                 {" "}
                                                 {m.profile?.full_name}{" "}
                                              </a>
@@ -1020,14 +796,10 @@ const CourseDetail = () => {
                                                    color: "gray",
                                                 }}
                                              >
-                                                {moment(m.date).format(
-                                                   "DD MMM, YYYY"
-                                                )}
+                                                {moment(m.date).format("DD MMM, YYYY")}
                                              </span>
                                           </h6>
-                                          <p className="mb-0 mt-3  ">
-                                             {m.message}
-                                          </p>
+                                          <p className="mb-0 mt-3  ">{m.message}</p>
                                        </div>
                                     </div>
                                  </div>
@@ -1048,10 +820,7 @@ const CourseDetail = () => {
                         onChange={handleMessageChange}
                         placeholder="What's your question?"
                      ></textarea>
-                     <button
-                        class="btn btn-primary ms-2 mb-0 w-25"
-                        type="submit"
-                     >
+                     <button class="btn btn-primary ms-2 mb-0 w-25" type="submit">
                         Post <i className="fas fa-paper-plane"></i>
                      </button>
                   </form>
@@ -1079,11 +848,7 @@ const CourseDetail = () => {
          </Modal>
 
          {/* Ask Question Modal */}
-         <Modal
-            show={addQuestionShow}
-            size="lg"
-            onHide={handleAddQuestionClose}
-         >
+         <Modal show={addQuestionShow} size="lg" onHide={handleAddQuestionClose}>
             <Modal.Header closeButton>
                <Modal.Title>Ask Question</Modal.Title>
             </Modal.Header>
@@ -1093,35 +858,15 @@ const CourseDetail = () => {
                      <label htmlFor="exampleInputEmail1" className="form-label">
                         Question Title
                      </label>
-                     <input
-                        value={createMessage.title}
-                        name="title"
-                        onChange={handleMessageChange}
-                        type="text"
-                        className="form-control"
-                     />
+                     <input value={createMessage.title} name="title" onChange={handleMessageChange} type="text" className="form-control" />
                   </div>
                   <div className="mb-3">
-                     <label
-                        htmlFor="exampleInputPassword1"
-                        className="form-label"
-                     >
+                     <label htmlFor="exampleInputPassword1" className="form-label">
                         Question Message
                      </label>
-                     <textarea
-                        onChange={handleMessageChange}
-                        value={createMessage.message}
-                        name="message"
-                        className="form-control"
-                        cols="30"
-                        rows="10"
-                     ></textarea>
+                     <textarea onChange={handleMessageChange} value={createMessage.message} name="message" className="form-control" cols="30" rows="10"></textarea>
                   </div>
-                  <button
-                     type="button"
-                     className="btn btn-secondary me-2"
-                     onClick={handleAddQuestionClose}
-                  >
+                  <button type="button" className="btn btn-secondary me-2" onClick={handleAddQuestionClose}>
                      <i className="fas fa-arrow-left"></i> Close
                   </button>
                   <button type="submit" className="btn btn-primary">
