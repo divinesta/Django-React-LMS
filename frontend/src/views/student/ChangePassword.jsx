@@ -15,6 +15,8 @@ const ChangePassword = () => {
       confirm_new_password: "",
    });
 
+   const [isLoading, setIsLoading] = useState(false);
+
    const handlePasswordChange = (event) => {
       setPassword({
          ...password,
@@ -38,6 +40,7 @@ const ChangePassword = () => {
       //       title: "Use a different password",
       //    });
       // }
+      setIsLoading(true);
 
       const formdata = new FormData();
       formdata.append("user_id", UserData()?.user_id);
@@ -52,6 +55,7 @@ const ChangePassword = () => {
                icon: res.data.icon,
                title: res.data.message,
             });
+            setIsLoading(false);
          });
    };
 
@@ -76,17 +80,10 @@ const ChangePassword = () => {
                         {/* Card body */}
                         <div className="card-body">
                            <div>
-                              <form
-                                 className="row gx-3 needs-validation"
-                                 noValidate=""
-                                 onSubmit={changePasswordSubmit}
-                              >
+                              <form className="row gx-3 needs-validation" noValidate="" onSubmit={changePasswordSubmit}>
                                  {/* First name */}
                                  <div className="mb-3 col-12 col-md-12">
-                                    <label
-                                       className="form-label"
-                                       htmlFor="fname"
-                                    >
+                                    <label className="form-label" htmlFor="fname">
                                        Old Password
                                     </label>
                                     <input
@@ -102,10 +99,7 @@ const ChangePassword = () => {
                                  </div>
                                  {/* Last name */}
                                  <div className="mb-3 col-12 col-md-12">
-                                    <label
-                                       className="form-label"
-                                       htmlFor="lname"
-                                    >
+                                    <label className="form-label" htmlFor="lname">
                                        New Password
                                     </label>
                                     <input
@@ -122,10 +116,7 @@ const ChangePassword = () => {
 
                                  {/* Country */}
                                  <div className="mb-3 col-12 col-md-12">
-                                    <label
-                                       className="form-label"
-                                       htmlFor="editCountry"
-                                    >
+                                    <label className="form-label" htmlFor="editCountry">
                                        Confirm New Password
                                     </label>
                                     <input
@@ -141,13 +132,15 @@ const ChangePassword = () => {
                                  </div>
                                  <div className="col-12">
                                     {/* Button */}
-                                    <button
-                                       className="btn btn-primary"
-                                       type="submit"
-                                    >
-                                       Save New Password{" "}
-                                       <i className="fas fa-check-circle"></i>
-                                    </button>
+                                    {isLoading ? (
+                                       <button className="btn btn-primary" disabled type="submit">
+                                          Loading {" "} <i className="fas fa-spinner fa-spin"></i>
+                                       </button>
+                                    ) : (
+                                       <button className="btn btn-primary" type="submit">
+                                          Save New Password <i className="fas fa-check-circle"></i>
+                                       </button>
+                                    )}
                                  </div>
                               </form>
                            </div>
