@@ -23,17 +23,17 @@ const Wishlist = () => {
    const country = GetCurrentAddress();
    // console.log(country);
 
-   const fetchWishist = () => {
+   const fetchWishlist = () => {
       useAxios()
          .get(`student/wishlist/${userId}/`)
          .then((res) => {
             setWishlist(res.data);
-            console.log(res.data);
          });
-   };
-
-   useEffect(() => {
-      fetchWishist();
+      };
+      console.log(wishlists);
+      
+      useEffect(() => {
+         fetchWishlist();
    }, []);
 
    const addToCart = async (courseId, userId, price, country, cartId) => {
@@ -49,7 +49,7 @@ const Wishlist = () => {
          await useAxios()
             .post(`course/cart/`, formdata)
             .then((res) => {
-               console.log(res.data);
+               // console.log(res.data);
                Toast.fire({
                   title: "Added To Cart",
                   icon: "success",
@@ -65,6 +65,21 @@ const Wishlist = () => {
       } catch (error) {
          console.log(error);
       }
+   };
+
+   const addToWishlist = (courseId) => {
+      const formdata = new FormData();
+      formdata.append("user_id", userId);
+      formdata.append("course_id", courseId);
+
+      useAxios().post(`student/wishlist/${userId}/`, formdata).then((res) => {
+            console.log(res.data);
+            fetchWishlist();
+            Toast.fire({
+               icon: "success",
+               title: res.data.message,
+            });
+         });
    };
 
    return (
@@ -110,7 +125,7 @@ const Wishlist = () => {
                                                 <span className="badge bg-info">{wishlist.course?.level}</span>
                                                 <span className="badge bg-info ms-2">{wishlist.course?.language}</span>
                                              </div>
-                                             <a href="#" className="fs-5">
+                                             <a onClick={() => addToWishlist(wishlist.course.id)} className="fs-5">
                                                 <i className="fas fa-heart text-danger align-middle" />
                                              </a>
                                           </div>

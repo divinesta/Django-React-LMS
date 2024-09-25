@@ -73,7 +73,7 @@ class CouponAdmin(admin.ModelAdmin):
 
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
-    list_display = ['user', 'course']
+    list_display = ['id', 'user', 'course']
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):

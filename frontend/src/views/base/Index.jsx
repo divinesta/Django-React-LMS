@@ -10,6 +10,7 @@ import Toast from "../plugin/Toast";
 import CartId from "../plugin/CartId";
 import GetCurrentAddress from "../plugin/UserCountry";
 import UserData from "../plugin/UserData";
+import { userId } from "../../utils/constants";
 import { CartContext } from "../plugin/Context";
 
 const Index = () => {
@@ -30,7 +31,7 @@ const Index = () => {
             .then((res) => {
                setCourses(res.data);
                setIsLoading(false);
-               console.log(res.data);
+               // console.log(res.data);
             });
       } catch (error) {
          console.log(error);
@@ -84,6 +85,24 @@ const Index = () => {
       { length: totalPages },
       (_, index) => index + 1
    );
+
+
+      const addToWishlist = (courseId) => {
+         const formdata = new FormData();
+         formdata.append("user_id", userId);
+         formdata.append("course_id", courseId);
+
+         useAxios()
+            .post(`student/wishlist/${userId}/`, formdata)
+            .then((res) => {
+               console.log(res.data);
+               Toast.fire({
+                  icon: "success",
+                  title: res.data.message,
+               });
+            });
+      };
+
 
    return (
       <>
@@ -245,7 +264,7 @@ const Index = () => {
                                              {course?.language}
                                           </span>
                                        </div>
-                                       <a href="#" className="fs-5">
+                                       <a onClick={() => addToWishlist(course.id)} className="fs-5">
                                           <i className="fas fa-heart text-danger align-middle" />
                                        </a>
                                     </div>
