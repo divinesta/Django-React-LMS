@@ -988,3 +988,45 @@ class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
         teacher_id = self.kwargs['teacher_id']
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Question_Answer.objects.filter(course__teacher=teacher)
+    
+
+class TeacherCouponListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = api_serializers.CouponSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Coupon.objects.filter(teacher=teacher)
+
+
+class TeacherCouponDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = api_serializers.CouponSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        teacher_id = self.kwargs['teacher_id']
+        coupon_id = self.kwargs['coupon_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Coupon.objects.get(teacher=teacher, id=coupon_id)
+
+
+class TeacherNotificationListAPIView(generics.ListAPIView):
+    serializer_class = api_serializers.NotificationSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Notification.objects.filter(teacher=teacher, seen=False)
+
+
+class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
+    serializer_class = api_serializers.NotificationSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        teacher_id = self.kwargs['teacher_id']
+        noti_id = self.kwargs['noti_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Notification.objects.get(teacher=teacher, id=noti_id)

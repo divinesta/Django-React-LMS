@@ -54,4 +54,8 @@ urlpatterns = [
       path("teacher/best-course-earning/<teacher_id>/", api_views.TeacherBestSellingCourseAPIView.as_view({'get': 'list'})),
       path("teacher/course-order-list/<teacher_id>/", api_views.TeacherCourseOrdersListAPIView.as_view()),
       path("teacher/question-answer-list/<teacher_id>/", api_views.TeacherQuestionAnswerListAPIView.as_view()),
+      path("teacher/coupon-list/<teacher_id>/", api_views.TeacherCouponListCreateAPIView.as_view()),
+      path("teacher/coupon-detail/<teacher_id>/<coupon_id>/", api_views.TeacherCouponDetailAPIView.as_view()),
+      path("teacher/noti-list/<teacher_id>/", api_views.TeacherNotificationListAPIView.as_view()),
+      path("teacher/noti-detail/<teacher_id>/<noti_id>/", api_views.TeacherNotificationDetailAPIView.as_view()),
 ]

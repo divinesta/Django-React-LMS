@@ -65,11 +65,11 @@ class ReviewAdmin(admin.ModelAdmin):
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ['user', 'teacher', 'order', 'order_item', 'review', 'notification_type', 'seen', 'date']
+    list_display = ['user', 'id', 'teacher', 'order', 'order_item', 'review', 'notification_type', 'seen', 'date']
 
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
-    list_display = ['code', 'discount', 'active', 'date']
+    list_display = ['code', 'id', 'discount', 'active', 'date']
 
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
