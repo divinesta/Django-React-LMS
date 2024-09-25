@@ -868,3 +868,13 @@ class TeacherSummaryAPIView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class TeacherCourseListAPIView(generics.ListAPIView):
+    serializer_class = api_serializers.CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Course.objects.filter(teacher=teacher)
