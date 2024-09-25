@@ -6,7 +6,7 @@ from django.db import models
 from django.contrib.auth.hashers import check_password
 
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
@@ -878,3 +878,49 @@ class TeacherCourseListAPIView(generics.ListAPIView):
         teacher_id = self.kwargs['teacher_id']
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Course.objects.filter(teacher=teacher)
+    
+
+class TeacherReviewListAPIView(generics.ListAPIView):
+    serializer_class = api_serializers.ReviewSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Review.objects.filter(course__teacher=teacher)
+    
+
+class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
+    serializer_class = api_serializers.ReviewSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        teacher_id = self.kwargs['teacher_id']
+        review_id = self.kwargs['review_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Review.objects.get(course__teacher=teacher, id=review_id)
+    
+
+class TeacherStudentsListAPIVIew(viewsets.ViewSet):
+    
+    def list(self, request, teacher_id=None):
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+
+        enrolled_courses = api_models.EnrolledCourse.objects.filter(teacher=teacher)
+        unique_student_ids = set()
+        students = []
+
+        for course in enrolled_courses:
+            if course.user_id not in unique_student_ids:
+                user = User.objects.get(id=course.user_id)
+                student = {
+                    "full_name": user.profile.full_name,
+                    "image": user.profile.image.url,
+                    "country": user.profile.country,
+                    "date": course.date
+                }
+
+                students.append(student)
+                unique_student_ids.add(course.user_id)
+
+        return Response(students)
