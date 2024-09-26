@@ -36,7 +36,7 @@ const TeacherNotification = () => {
       useAxios()
          .patch(`teacher/noti-detail/${teacherId}/${notiId}/`, formdata)
          .then((res) => {
-            console.log(res.data);
+            // console.log(res.data);
             fetchNotification();
             Toast.fire({
                icon: "success",
