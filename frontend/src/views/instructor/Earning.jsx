@@ -20,21 +20,21 @@ const Earning = () => {
       useAxios()
          .get(`teacher/summary/${userId}/`)
          .then((res) => {
-            console.log(res.data[0]);
+            // console.log(res.data[0]);
             setStats(res.data[0]);
          });
 
       useAxios()
          .get(`teacher/all-months-earning/${userId}/`)
          .then((res) => {
-            console.log(res.data);
+            // console.log(res.data);
             setEarning(res.data);
          });
 
       useAxios()
          .get(`teacher/best-course-earning/${userId}/`)
          .then((res) => {
-            console.log(res.data);
+            // console.log(res.data);
             setBestSellingCourse(res.data);
          });
    }
