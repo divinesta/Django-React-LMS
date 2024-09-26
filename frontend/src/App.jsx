@@ -28,6 +28,21 @@ import StudentChangePassword from "./views/student/ChangePassword";
 import StudentWishlist from "./views/student/Wishlist";
 import StudentProfile from "./views/student/Profile";
 
+// Instructor Routes
+import InstructorDashboard from "./views/instructor/Dashboard";
+import InstructorCourses from "./views/instructor/Courses";
+import InstructorCourseCreate from "./views/instructor/CourseCreate";
+import InstructorCourseEdit from "./views/instructor/CourseEdit";   
+import InstructorChangePassword from "./views/instructor/ChangePassword";
+import InstructorProfile from "./views/instructor/Profile";
+import InstructorReview from "./views/instructor/Review";
+import InstructorCoupon from "./views/instructor/Coupon";
+import InstructorEarning from "./views/instructor/Earning";
+import InstructorOrders from "./views/instructor/Orders";
+import InstructorStudents from "./views/instructor/Students";
+import InstructorQA from "./views/instructor/QA";
+import InstructorTeacherNotification from "./views/instructor/TeacherNotification";
+
 const App = () => {
    const cart_id = CartId();
    const [cartCount, setCartCount] = useState(0);
@@ -70,6 +85,21 @@ const App = () => {
                      <Route path="/student/courses/:enrollment_id/" element={<StudentCourseDetail />} />
                      <Route path="/student/wishlist/" element={<StudentWishlist />} />
                      <Route path="/student/profile/" element={<StudentProfile />} />
+
+                     {/* Instructor Routes */}
+                     <Route path="/instructor/dashboard/" element={<InstructorDashboard />} />
+                     <Route path="/instructor/change-password/" element={<InstructorChangePassword />} />
+                     <Route path="/instructor/courses/" element={<InstructorCourses />} />
+                     <Route path="/instructor/create-course/" element={<InstructorCourseCreate />} />
+                     <Route path="/instructor/edit-course/:course_id/" element={<InstructorCourseEdit />} />
+                     <Route path="/instructor/profile/" element={<InstructorProfile />} />
+                     <Route path="/instructor/reviews/" element={<InstructorReview />} />
+                     <Route path="/instructor/coupon/" element={<InstructorCoupon />} />
+                     <Route path="/instructor/earning/" element={<InstructorEarning />} />
+                     <Route path="/instructor/orders/" element={<InstructorOrders />} />
+                     <Route path="/instructor/students/" element={<InstructorStudents />} />
+                     <Route path="/instructor/question-answer/" element={<InstructorQA />} />
+                     <Route path="/instructor/notifications/" element={<InstructorTeacherNotification />} />
                   </Routes>
                </MainWrapper>
             </BrowserRouter>
