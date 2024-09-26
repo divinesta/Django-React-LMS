@@ -39,7 +39,7 @@ const Dashboard = () => {
 
    const handleSearch = (event) => {
       const query = event.target.value.toLowerCase();
-      console.log(query);
+      // console.log(query);
       if (query === "") {
          fetchData();
       } else {
