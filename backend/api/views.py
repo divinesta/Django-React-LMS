@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth.hashers import check_password
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics, status, viewsets
@@ -23,6 +24,7 @@ import requests
 import random
 from decimal import Decimal
 from datetime import datetime, timedelta
+from distutils.util import strtobool # type: ignore
 
 # Create your views here.
 
@@ -1030,3 +1032,230 @@ class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
         noti_id = self.kwargs['noti_id']
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Notification.objects.get(teacher=teacher, id=noti_id)
+    
+
+class CourseCreateAPIView(generics.CreateAPIView):
+    queryset = api_models.Course.objects.all()
+    serializer_class = api_serializers.CourseSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        serializer.is_valid(raise_exception=True)
+        course_instance = serializer.save()
+        variant_data = self.extract_variant_data(self.request.data)
+        self.create_variants_and_items(variant_data, course_instance)
+
+    def extract_variant_data(self, data):
+        variant_data = []
+        for key, value in data.items():
+            if key.startswith('variant') and '[variant_title]' in key:
+                index = key.split('[')[1].split(']')[0]
+                title = value
+                variant_dict = {'title': title}
+                item_data_list = self.extract_item_data(data, index)
+                variant_data.append({'variant_data': variant_dict, 'variant_item_data': item_data_list})
+        return variant_data
+
+    def extract_item_data(self, data, index):
+        item_data_list = []
+        current_item = {}
+        for item_key, item_value in data.items():
+            if f'variants[{index}][items]' in item_key:
+                field_name = item_key.split('[')[-1].split(']')[0]
+                if field_name == "title":
+                    if current_item:
+                        item_data_list.append(current_item)
+                    current_item = {}
+                current_item.update({field_name: item_value})
+        if current_item:
+            item_data_list.append(current_item)
+        return item_data_list
+
+    def create_variants_and_items(self, variant_data, course_instance):
+        for data_entry in variant_data:
+            variant = api_models.Variant.objects.create(title=data_entry['variant_data']['title'], course=course_instance)
+            for item_data in data_entry['variant_item_data']:
+                preview_value = item_data.get("preview")
+                preview = bool(strtobool(str(preview_value))) if preview_value is not None else False
+                api_models.VariantItem.objects.create(
+                    variant=variant,
+                    title=item_data.get("title"),
+                    description=item_data.get("description"),
+                    file=item_data.get("file"),
+                    preview=preview,
+                )
+
+
+
+class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
+    queryset = api_models.Course.objects.all()
+    serializer_class = api_serializers.CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        teacher_id = self.kwargs['teacher_id']
+        course_id = self.kwargs['course_id']
+
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        course = api_models.Course.objects.get(course_id=course_id)
+
+        return course
+
+    def update(self, request, *args, **kwargs):
+        course = self.get_object()
+        serializer = self.get_serializer(course, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if "image" in request.data and isinstance(request.data['image'], InMemoryUploadedFile):
+            course.image = request.data['image']
+        elif 'image' in request.data and str(request.data['image']) == "No File":
+            course.image = None
+
+        if 'file' in request.data and not str(request.data['file']).startswith("http://"):
+            course.file = request.data['file']
+
+        if 'category' in request.data['category'] and request.data['category'] != 'NaN' and request.data['category'] != "undefined":
+            category = api_models.Category.objects.get(id=request.data['category'])
+            course.category = category
+
+        self.perform_update(serializer)
+        self.update_variant(course, request.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def update_variant(self, course, request_data):
+        for key, value in request_data.items():
+            if key.startswith("variants") and '[variant_title]' in key:
+                index = key.split('[')[1].split(']')[0]
+                title = value
+
+                id_key = f"variants[{index}][variant_id]"
+                variant_id = request_data.get(id_key)
+
+                item_data_list = self.extract_item_data(request_data, index)
+
+                existing_variant = course.variant_set.filter(id=variant_id).first()
+
+                if existing_variant:
+                    self.update_existing_variant(existing_variant, title, item_data_list)
+                else:
+                    self.create_new_variant(course, title, item_data_list)
+
+    def extract_item_data(self, request_data, index):
+        item_data_list = []
+        current_item = {}
+        for item_key, item_value in request_data.items():
+            if f'variants[{index}][items]' in item_key:
+                field_name = item_key.split('[')[-1].split(']')[0]
+                if field_name == "title":
+                    if current_item:
+                        item_data_list.append(current_item)
+                    current_item = {}
+                current_item.update({field_name: item_value})
+        if current_item:
+            item_data_list.append(current_item)
+        return item_data_list
+
+    def update_existing_variant(self, variant, title, item_data_list):
+        variant.title = title
+        variant.save()
+
+        for item_data in item_data_list[1:]:
+            preview_value = item_data.get("preview")
+            preview = bool(strtobool(str(preview_value))) if preview_value is not None else False
+
+            variant_item = api_models.VariantItem.objects.filter(variant_item_id=item_data.get("variant_item_id")).first()
+
+            if not str(item_data.get("file")).startswith("http://"):
+                file = item_data.get("file") if item_data.get("file") != "null" else None
+                title = item_data.get("title")
+                description = item_data.get("description")
+
+                if variant_item:
+                    variant_item.title = title
+                    variant_item.description = description
+                    variant_item.file = file
+                    variant_item.preview = preview
+                else:
+                    variant_item = api_models.VariantItem.objects.create(
+                        variant=variant,
+                        title=title,
+                        description=description,
+                        file=file,
+                        preview=preview
+                    )
+            else:
+                title = item_data.get("title")
+                description = item_data.get("description")
+
+                if variant_item:
+                    variant_item.title = title
+                    variant_item.description = description
+                    variant_item.preview = preview
+                else:
+                    variant_item = api_models.VariantItem.objects.create(
+                        variant=variant,
+                        title=title,
+                        description=description,
+                        preview=preview
+                    )
+
+            variant_item.save()
+
+    def create_new_variant(self, course, title, item_data_list):
+        new_variant = api_models.Variant.objects.create(course=course, title=title)
+        for item_data in item_data_list:
+            preview_value = item_data.get("preview")
+            preview = bool(strtobool(str(preview_value))) if preview_value is not None else False
+
+            api_models.VariantItem.objects.create(
+                variant=new_variant,
+                title=item_data.get("title"),
+                description=item_data.get("description"),
+                file=item_data.get("file"),
+                preview=preview,
+            )
+
+    def save_nested_data(self, course_instance, serializer_class, data):
+        serializer = serializer_class(data=data, many=True, context={"course_instance": course_instance})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(course=course_instance)
+
+
+class CourseDetailAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = api_serializers.CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        course_id = self.kwargs['course_id']
+        return api_models.Course.objects.get(course_id=course_id)
+
+class CourseVariantDeleteAPIView(generics.DestroyAPIView):
+    serializer_class = api_serializers.VariantSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        variant_id = self.kwargs['variant_id']
+        teacher_id = self.kwargs['teacher_id']
+        course_id = self.kwargs['course_id']
+
+        print("variant_id ========", variant_id)
+
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        course = api_models.Course.objects.get(teacher=teacher, course_id=course_id)
+        return api_models.Variant.objects.get(id=variant_id)
+    
+class CourseVariantItemDeleteAPIVIew(generics.DestroyAPIView):
+    serializer_class = api_serializers.VariantItemSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        variant_id = self.kwargs['variant_id']
+        variant_item_id = self.kwargs['variant_item_id']
+        teacher_id = self.kwargs['teacher_id']
+        course_id = self.kwargs['course_id']
+
+
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        course = api_models.Course.objects.get(teacher=teacher, course_id=course_id)
+        variant = api_models.Variant.objects.get(variant_id=variant_id, course=course)
+        return api_models.VariantItem.objects.get(variant=variant, variant_item_id=variant_item_id)
